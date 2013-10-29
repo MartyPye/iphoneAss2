@@ -1,0 +1,57 @@
+--- ViewController.m	2013-10-26 12:35:00.000000000 +0200
++++ ViewController-withRecognizer.m	2013-10-26 13:06:40.000000000 +0200
+@@ -35,9 +35,54 @@
+ 	// Do any additional setup after loading the view, typically from a nib.
+ 	currentOperation = OP_NOOP;
+ 	textFieldShouldBeCleared = NO;
++    
++    // swipe gesture recognizers
++    // NOTE: Observe how target-action is established in the code below. This is equivalent to dragging connections in the Interface Builder.
++    UISwipeGestureRecognizer *leftSwipeRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleGesture:)];
++    leftSwipeRecognizer.direction = UISwipeGestureRecognizerDirectionLeft;
++    leftSwipeRecognizer.numberOfTouchesRequired = 1;
++    
++    UISwipeGestureRecognizer *rightSwipeRecognizer = [[UISwipeGestureRecognizer alloc] init];
++    rightSwipeRecognizer.direction = UISwipeGestureRecognizerDirectionRight;
++    rightSwipeRecognizer.numberOfTouchesRequired = 1;
++    [rightSwipeRecognizer addTarget:self action:@selector(handleGesture:)];
++    
++    [self.view addGestureRecognizer:leftSwipeRecognizer];
++    [self.view addGestureRecognizer:rightSwipeRecognizer];
++    
+ }
+ 
+ 
++#pragma mark - handle gestures
++- (void)handleGesture:(UIGestureRecognizer *)gestureRecognizer;
++{
++    // ignore other gesture recognizer
++    if (![gestureRecognizer isKindOfClass:[UISwipeGestureRecognizer class]])
++    {
++        return;
++    }
++    
++    UISwipeGestureRecognizer *swipeRecognizer = (UISwipeGestureRecognizer *)gestureRecognizer;
++    
++    switch (swipeRecognizer.direction)
++    {
++        case UISwipeGestureRecognizerDirectionLeft:
++        {
++            NSLog(@"Left swipe detected");
++            // TODO: handle left swipe
++            break;
++        }
++        case UISwipeGestureRecognizerDirectionRight:
++        {
++            NSLog(@"Right swipe detected");
++            // TODO: handle right swipe
++            break;
++        }
++        default:
++            break;
++    }
++}
++
+ - (void)didReceiveMemoryWarning
+ {
+     [super didReceiveMemoryWarning];
