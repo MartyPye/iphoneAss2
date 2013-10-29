@@ -101,9 +101,10 @@
  *	The sender object is a pointer to the calling button in this case. 
  *	This way, you can easily change the buttons color or other properties
  */
-- (IBAction)operationButtonPressed:(UIButton *)sender {
+- (IBAction)operationButtonPressed:(UIButton *)sender;
+{
+    // toggle the selected operation button
     sender.selected = YES;
-//    [sender setImage:[UIImage imageNamed:@"Default.png"] forState:UIControlStateSelected];
     if (lastToggledOperator != nil && lastToggledOperator != sender) {
         lastToggledOperator.selected = NO;
     }
@@ -120,15 +121,13 @@
 		currentOperation = sender.tag;
 	}
     // only execute operation if previous button pressed was a number
-	else if (!lastButtonPressWasOperator && lastButtonPressWasNumber)
+	else if (lastButtonPressWasNumber)
 	{
 		firstOperand = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
 		currentOperation = sender.tag;
 		self.numberTextField.text = [NSString stringWithFormat:@"%.6f",firstOperand];
         self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
-		// The previous line does exactly the same as
-		// [self.numberTextField setText:[NSString stringWithFormat:@"%.1f",firstOperand]];
-
+        lastButtonPressWasNumber = NO;
 	}
     
     else if (lastButtonPressWasOperator) {
