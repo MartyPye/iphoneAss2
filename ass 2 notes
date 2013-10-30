@@ -1,9 +1,8 @@
-removes unnecessary leading zeros. NSString category to achieve this. You can't even enter 00000 explicitly, no can do :)
+removes unnecessary leading zeros. NSString category to achieve this. You can't even enter 00000 explicitly
 removes dangling zeros after decimal point
 multiple presses of operators after each other are disregarded.
 operators are toggled
-can't enter multiple decimal points
+can't enter multiple decimal points e.g. 5..2 or 5.23.2133.
 handle multiple result presses
-// possible todos
-- handle division by zero
+handle division by zero
 

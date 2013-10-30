@@ -28,6 +28,10 @@
     BOOL lastButtonPressWasNumber;
     BOOL lastButtonPressWasResult;
     UIButton *lastToggledOperator;
+    // used for the swipe gesture
+    NSUInteger decimalPointCounter;
+    // saves exact value so that decreasing and increasing decimalPoint counter doesn't loose precision
+    double currentResult;
     
 }
 
@@ -76,19 +80,22 @@
     {
         case UISwipeGestureRecognizerDirectionLeft:
         {
-            NSLog(@"Left swipe detected");
-            // TODO: handle left swipe
+            NSLog(@"left swipe");
+            if (decimalPointCounter < 6) decimalPointCounter++;
             break;
         }
         case UISwipeGestureRecognizerDirectionRight:
         {
-            NSLog(@"Right swipe detected");
-            // TODO: handle right swipe
+            NSLog(@"right swipe");
+            if (decimalPointCounter > 0) decimalPointCounter--;
             break;
         }
         default:
             break;
     }
+    
+    [self updateTextField];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -115,18 +122,35 @@
 	// If so, we can start a new calculation, otherwise, we replace the first operand with the result of the operation
     lastButtonPressWasPoint = NO;
     lastButtonPressWasResult = NO;
-	if (firstOperand == 0.)
+	if (firstOperand == 0. && currentResult == 0.)
 	{
 		firstOperand = [self.numberTextField.text doubleValue];
 		currentOperation = sender.tag;
 	}
+    
+    else if (firstOperand == 0.)
+    {
+        firstOperand = currentResult;
+		currentOperation = sender.tag;
+    }
+    
     // only execute operation if previous button pressed was a number
 	else if (lastButtonPressWasNumber)
 	{
-		firstOperand = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
-		currentOperation = sender.tag;
-		self.numberTextField.text = [NSString stringWithFormat:@"%.6f",firstOperand];
-        self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
+        if (!([self.numberTextField.text doubleValue] == 0 && currentOperation == OP_DIV)) {
+            firstOperand = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
+            currentResult = firstOperand;
+            currentOperation = sender.tag;
+            [self updateTextField];
+//            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",firstOperand];
+//            self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
+        }
+        
+        else {
+            self.numberTextField.text = @"Error";
+            [self resetCalculator];
+        }
+        
         lastButtonPressWasNumber = NO;
 	}
     
@@ -143,17 +167,20 @@
     lastButtonPressWasOperator = NO;
 	// Just calculate the result
     if (!lastButtonPressWasResult) {
-        double result = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
-        self.numberTextField.text = [NSString stringWithFormat:@"%f",result];
+        if (!([self.numberTextField.text doubleValue] == 0 && currentOperation == OP_DIV)) {
+            double result = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
+            currentResult = result;
+            [self updateTextField];
+//            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",result];
+            // remove dangling decimal zeros
+            // self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
+        }
         
-        // remove dangling decimal zeros
-        self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
-        // Reset the internal state
-        currentOperation = OP_NOOP;
-        firstOperand = 0.;
-        lastToggledOperator.selected = NO;
-        textFieldShouldBeCleared = YES;
-        lastButtonPressWasResult = YES;
+        else {
+            self.numberTextField.text = @"Error";
+        }
+        
+        [self resetCalculator];
     }
 
 }
@@ -195,6 +222,7 @@
     lastButtonPressWasOperator = NO;
     lastButtonPressWasPoint = NO;
 	firstOperand = 0;
+    currentResult = 0;
 	currentOperation = OP_NOOP;
 	self.numberTextField.text = @"0";
     lastToggledOperator.selected = NO;
@@ -221,6 +249,45 @@
 			return NAN;
 			break;
 	}
+}
+
+- (void) resetCalculator;
+{
+    // Reset the internal state
+    currentOperation = OP_NOOP;
+    firstOperand = 0.;
+    lastToggledOperator.selected = NO;
+    textFieldShouldBeCleared = YES;
+    lastButtonPressWasResult = YES;
+}
+
+- (void) updateTextField;
+{
+    switch (decimalPointCounter) {
+        case 0:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.0f", currentResult];
+            break;
+        case 1:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.1f", currentResult];
+            break;
+        case 2:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.2f", currentResult];
+            break;
+        case 3:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.3f", currentResult];
+            break;
+        case 4:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.4f", currentResult];
+            break;
+        case 5:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.5f", currentResult];
+            break;
+        case 6:
+            self.numberTextField.text = [NSString stringWithFormat:@"%.6f", currentResult];
+            break;
+        default:
+            break;
+    }
 }
 
 - (BOOL)prefersStatusBarHidden;
