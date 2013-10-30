@@ -32,8 +32,15 @@
     NSUInteger decimalPointCounter;
     // saves exact value so that decreasing and increasing decimalPoint counter doesn't loose precision
     double currentResult;
+    NSUInteger lastPressedOperatorTag;
+    NSMutableArray *historyOfResults;
+    NSUInteger posInHistory;
     
 }
+@property (weak, nonatomic) IBOutlet UIButton *plusButton;
+@property (weak, nonatomic) IBOutlet UIButton *minusButton;
+@property (weak, nonatomic) IBOutlet UIButton *multButton;
+@property (weak, nonatomic) IBOutlet UIButton *divButton;
 
 @end
 
@@ -45,8 +52,39 @@
     [super viewDidLoad];
     
 	// Do any additional setup after loading the view, typically from a nib.
-	currentOperation = OP_NOOP;
-	textFieldShouldBeCleared = NO;
+//	currentOperation = OP_NOOP;
+//	textFieldShouldBeCleared = NO;
+    
+    currentResult = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentResult"];
+    self.numberTextField.text = [[NSUserDefaults standardUserDefaults] stringForKey:@"NumberTextField"];
+    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
+    lastPressedOperatorTag = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedOperatorTag"];
+    if (anOperatorWasPressed) {
+        switch (lastPressedOperatorTag) {
+            case 11:
+                self.plusButton.selected = YES;
+                currentOperation = OP_ADD;
+                break;
+            case 12:
+                self.minusButton.selected = YES;
+                currentOperation = OP_SUB;
+                break;
+            case 13:
+                self.multButton.selected = YES;
+                currentOperation = OP_MULT;
+                break;
+            case 14:
+                self.divButton.selected = YES;
+                currentOperation = OP_DIV;
+                break;
+            default:
+                break;
+        }
+        textFieldShouldBeCleared = YES;
+    }
+    firstOperand = [[NSUserDefaults standardUserDefaults] doubleForKey:@"FirstOperand"];
+    // load the amount of decimal points (user preference)
+    decimalPointCounter = [[NSUserDefaults standardUserDefaults] integerForKey:@"AmountOfDecimalPoints"];
     
     // swipe gesture recognizers
     // NOTE: Observe how target-action is established in the code below. This is equivalent to dragging connections in the Interface Builder.
@@ -61,6 +99,8 @@
     
     [self.view addGestureRecognizer:leftSwipeRecognizer];
     [self.view addGestureRecognizer:rightSwipeRecognizer];
+    
+    historyOfResults = [NSMutableArray arrayWithCapacity:10];
     
 }
 
@@ -96,6 +136,9 @@
     
     [self updateTextField];
     
+    // register decimal point count in user defaults
+    [self saveState];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -111,11 +154,13 @@
 - (IBAction)operationButtonPressed:(UIButton *)sender;
 {
     // toggle the selected operation button
+
+    [self deselectAllButtons];
+    
     sender.selected = YES;
-    if (lastToggledOperator != nil && lastToggledOperator != sender) {
-        lastToggledOperator.selected = NO;
-    }
     lastToggledOperator = sender;
+    lastPressedOperatorTag = lastToggledOperator.tag;
+    [self saveState];
 	// Have a look at the tag-property of the buttons calling this method
 	
 	// Once a button is pressed, we check if the first operand is zero
@@ -157,6 +202,9 @@
     else if (lastButtonPressWasOperator) {
         currentOperation = sender.tag;
     }
+    
+    [self saveState];
+    
 	textFieldShouldBeCleared = YES;
     lastButtonPressWasOperator = YES;
 }
@@ -170,6 +218,8 @@
         if (!([self.numberTextField.text doubleValue] == 0 && currentOperation == OP_DIV)) {
             double result = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
             currentResult = result;
+            [self addResultToHistory:currentResult];
+            [self saveState];
             [self updateTextField];
 //            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",result];
             // remove dangling decimal zeros
@@ -189,6 +239,7 @@
     
     lastButtonPressWasOperator = NO;
     lastButtonPressWasResult = NO;
+    [self deselectAllButtons];
 	// If the textField is to be cleared, just replace it with the pressed number
 	if (textFieldShouldBeCleared)
 	{
@@ -202,6 +253,7 @@
     
     // remove unnecessary leading zeros
     self.numberTextField.text = [NSString removeLeadingZerosFromString:self.numberTextField.text];
+    [self saveState];
     lastButtonPressWasNumber = YES;
 }
 
@@ -213,11 +265,12 @@
         self.numberTextField.text = [self.numberTextField.text stringByAppendingString:@"."];
         lastButtonPressWasPoint = YES;
     }
+    [self saveState];
 }
 
 // The parameter type id says that any object can be sender of this method.
 // As we do not need the pointer to the clear button here, it is not really important.
-- (IBAction)clearDisplay:(id)sender {
+- (IBAction)clearDisplay:(UIButton*)sender {
     lastButtonPressWasNumber = NO;
     lastButtonPressWasOperator = NO;
     lastButtonPressWasPoint = NO;
@@ -226,7 +279,33 @@
 	currentOperation = OP_NOOP;
 	self.numberTextField.text = @"0";
     lastToggledOperator.selected = NO;
+    self.plusButton.selected = NO;
+    self.minusButton.selected = NO;
+    self.multButton.selected = NO;
+    self.divButton.selected = NO;
+    [self saveState];
 }
+
+- (IBAction)arrowPressed:(UIButton*)sender {
+    // right arrow
+    if (sender.tag == 15) {
+        if (posInHistory < historyOfResults.count - 1) {
+            posInHistory++;
+            currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+            [self updateTextField];
+        }
+    }
+    
+    // left arrow
+    else {
+        if (posInHistory > 0) {
+            posInHistory--;
+            currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+            [self updateTextField];
+        }
+    }
+}
+
 
 #pragma mark - General Methods
 // This method returns the result of the specified operation
@@ -256,7 +335,9 @@
     // Reset the internal state
     currentOperation = OP_NOOP;
     firstOperand = 0.;
+    currentResult = 0.; // DANGEROUS
     lastToggledOperator.selected = NO;
+    [self saveState];
     textFieldShouldBeCleared = YES;
     lastButtonPressWasResult = YES;
 }
@@ -287,6 +368,40 @@
             break;
         default:
             break;
+    }
+    
+    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
+}
+
+- (void) saveState;
+{
+    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:currentResult] forKey:@"CurrentResult"];
+    [[NSUserDefaults standardUserDefaults] setBool:lastToggledOperator.selected forKey:@"LastToggledOperatorSelected"];
+    [[NSUserDefaults standardUserDefaults] setInteger:lastPressedOperatorTag forKey:@"LastPressedOperatorTag"];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:decimalPointCounter] forKey:@"AmountOfDecimalPoints"];
+    [[NSUserDefaults standardUserDefaults] setDouble:firstOperand forKey:@"FirstOperand"];
+}
+
+- (void) deselectAllButtons;
+{
+    lastToggledOperator.selected = NO;
+    self.minusButton.selected = NO;
+    self.plusButton.selected = NO;
+    self.multButton.selected = NO;
+    self.divButton.selected = NO;
+}
+
+- (void) addResultToHistory: (double) theResult;
+{
+    if (historyOfResults.count < 10) {
+        [historyOfResults addObject:[NSNumber numberWithDouble:theResult]];
+        posInHistory = historyOfResults.count - 1;
+    }
+    
+    else {
+        [historyOfResults removeObjectAtIndex:0];
+        [historyOfResults addObject:[NSNumber numberWithDouble:theResult]];
     }
 }
 

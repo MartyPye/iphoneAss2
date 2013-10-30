@@ -7,7 +7,11 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
             <connections>
+                <outlet property="divButton" destination="13" id="QCy-eD-hav"/>
+                <outlet property="minusButton" destination="30" id="Wyu-y4-cLM"/>
+                <outlet property="multButton" destination="12" id="HeK-N5-tCD"/>
                 <outlet property="numberTextField" destination="10" id="31"/>
+                <outlet property="plusButton" destination="G5R-sx-1s7" id="4E5-QP-mUS"/>
                 <outlet property="view" destination="6" id="7"/>
             </connections>
         </placeholder>
@@ -199,21 +203,27 @@
                         <action selector="numberEntered:" destination="-1" eventType="touchUpInside" id="ecn-Dr-0I1"/>
                     </connections>
                 </button>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="KDL-Tx-Hpt">
+                <button opaque="NO" tag="16" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="KDL-Tx-Hpt">
                     <rect key="frame" x="89" y="85" width="72" height="64"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <fontDescription key="fontDescription" type="boldSystem" pointSize="36"/>
                     <state key="normal" title="←">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
+                    <connections>
+                        <action selector="arrowPressed:" destination="-1" eventType="touchUpInside" id="394-la-cUs"/>
+                    </connections>
                 </button>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="MHx-St-Gdt">
+                <button opaque="NO" tag="15" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="MHx-St-Gdt">
                     <rect key="frame" x="161" y="85" width="72" height="64"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <fontDescription key="fontDescription" type="boldSystem" pointSize="36"/>
                     <state key="normal" title="→">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
+                    <connections>
+                        <action selector="arrowPressed:" destination="-1" eventType="touchUpInside" id="ujY-iX-7KV"/>
+                    </connections>
                 </button>
                 <button opaque="NO" tag="11" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="G5R-sx-1s7">
                     <rect key="frame" x="237" y="300" width="63" height="55"/>
