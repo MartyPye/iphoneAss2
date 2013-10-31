@@ -8,10 +8,12 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
             <connections>
                 <outlet property="divButton" destination="13" id="QCy-eD-hav"/>
+                <outlet property="leftArrowLabel" destination="7hF-p9-6KH" id="o8x-4e-Iot"/>
                 <outlet property="minusButton" destination="30" id="Wyu-y4-cLM"/>
                 <outlet property="multButton" destination="12" id="HeK-N5-tCD"/>
                 <outlet property="numberTextField" destination="10" id="31"/>
                 <outlet property="plusButton" destination="G5R-sx-1s7" id="4E5-QP-mUS"/>
+                <outlet property="rightArrowLabel" destination="MTm-ve-9xR" id="QGP-H7-vxh"/>
                 <outlet property="view" destination="6" id="7"/>
             </connections>
         </placeholder>
@@ -234,6 +236,20 @@
                         <action selector="operationButtonPressed:" destination="-1" eventType="touchUpInside" id="dRM-gC-w5C"/>
                     </connections>
                 </button>
+                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="7hF-p9-6KH">
+                    <rect key="frame" x="104" y="85" width="42" height="21"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="MTm-ve-9xR">
+                    <rect key="frame" x="177" y="85" width="42" height="21"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
             <gestureRecognizers/>

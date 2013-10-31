@@ -41,6 +41,8 @@
 @property (weak, nonatomic) IBOutlet UIButton *minusButton;
 @property (weak, nonatomic) IBOutlet UIButton *multButton;
 @property (weak, nonatomic) IBOutlet UIButton *divButton;
+@property (weak, nonatomic) IBOutlet UILabel *leftArrowLabel;
+@property (weak, nonatomic) IBOutlet UILabel *rightArrowLabel;
 
 @end
 
@@ -186,7 +188,7 @@
             firstOperand = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
             currentResult = firstOperand;
             currentOperation = sender.tag;
-            [self updateTextField];
+            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
 //            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",firstOperand];
 //            self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
         }
@@ -220,6 +222,7 @@
             currentResult = result;
             [self addResultToHistory:currentResult];
             [self saveState];
+            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
             [self updateTextField];
 //            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",result];
             // remove dangling decimal zeros
