@@ -452,6 +452,8 @@
         [historyOfResults removeObjectAtIndex:0];
         [historyOfResults addObject:[NSNumber numberWithDouble:theResult]];
     }
+    
+    [self updateArrowLabels];
 }
 
 - (void) updateArrowLabels;
