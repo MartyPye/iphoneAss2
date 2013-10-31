@@ -319,22 +319,25 @@
 
 - (IBAction)arrowPressed:(UIButton*)sender {
     // right arrow
-    if (sender.tag == 15) {
-        if (posInHistory < historyOfResults.count - 1) {
-            posInHistory++;
-            currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
-            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-            [self updateTextField];
-        }
-    }
     
-    // left arrow
-    else {
-        if (posInHistory > 0) {
-            posInHistory--;
-            currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
-            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-            [self updateTextField];
+    if (historyOfResults != nil) {
+        if (sender.tag == 15) {
+            if (posInHistory < historyOfResults.count - 1) {
+                posInHistory++;
+                currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+                self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+                [self updateTextField];
+            }
+        }
+        
+        // left arrow
+        else {
+            if (posInHistory > 0) {
+                posInHistory--;
+                currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+                self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+                [self updateTextField];
+            }
         }
     }
 }
