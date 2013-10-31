@@ -81,11 +81,15 @@
     if (!temp) {
         NSLog(@"Error reading plist: %@, format: %d", errorDesc, format);
     }
-    NSDictionary* root=[temp objectForKey:@"Root"];
-    historyOfResults = [root objectForKey:@"history"];
+    historyOfResults = (NSMutableArray*)[temp objectForKey:@"history"];
+    NSNumber* num = [temp objectForKey:@"posInHistory"];
+    posInHistory = [num integerValue];
     
-    //self.personName = [temp objectForKey:@"Name"];
-    //self.phoneNumbers = [NSMutableArray arrayWithArray:[temp objectForKey:@"Phones"]];
+    if (!historyOfResults)
+        historyOfResults = [NSMutableArray arrayWithCapacity:10];
+    
+    //NSLog(@"pos: %d", posInHistory);
+    //NSLog(@"Elements: %@", historyOfResults);
     
     
     if (anOperatorWasPressed) {
@@ -129,7 +133,7 @@
     [self.view addGestureRecognizer:leftSwipeRecognizer];
     [self.view addGestureRecognizer:rightSwipeRecognizer];
     
-    historyOfResults = [NSMutableArray arrayWithCapacity:10];
+    
     
 }
 
@@ -318,6 +322,7 @@
 
 - (IBAction)arrowPressed:(UIButton*)sender {
     // right arrow
+    
     if (sender.tag == 15) {
         if (posInHistory < historyOfResults.count - 1) {
             posInHistory++;
@@ -444,12 +449,14 @@
 
 -(void)storeHistory
 {
+    //NSLog(@"results: %@", historyOfResults);
+    
     NSString *error;
     NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     NSString *plistPath = [rootPath stringByAppendingPathComponent:@"Data.plist"];
     NSDictionary *plistDict = [NSDictionary dictionaryWithObjects:
-                               [NSArray arrayWithObjects: historyOfResults, nil]
-                                                          forKeys:[NSArray arrayWithObjects: @"history", nil]];
+                               [NSArray arrayWithObjects: historyOfResults, [[NSNumber alloc] initWithInt:posInHistory], nil]
+                                                          forKeys:[NSArray arrayWithObjects: @"history", @"posInHistory", nil]];
     NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:plistDict
                                                                    format:NSPropertyListXMLFormat_v1_0
                                                          errorDescription:&error];
