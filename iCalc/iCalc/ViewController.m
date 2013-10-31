@@ -458,6 +458,8 @@
 {
     self.leftArrowLabel.text = [NSString stringWithFormat:@"%i", posInHistory];
     self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", historyOfResults.count - 1 - posInHistory];
+    if (historyOfResults.count == 0)
+        self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", 0];
 }
 
 - (BOOL)prefersStatusBarHidden;
