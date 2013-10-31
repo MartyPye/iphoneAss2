@@ -35,6 +35,7 @@
     NSUInteger lastPressedOperatorTag;
     NSMutableArray *historyOfResults;
     NSUInteger posInHistory;
+    double currentValueInTextfield;
     
 }
 @property (weak, nonatomic) IBOutlet UIButton *plusButton;
@@ -167,7 +168,7 @@
             break;
     }
     if (lastButtonPressWasNumber) {
-        self.numberTextField.text = [NSString stringWithFormat:@"%f", [self.numberTextField.text doubleValue]];
+        self.numberTextField.text = [NSString stringWithFormat:@"%f", currentValueInTextfield];
     }
     else {
         self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
@@ -205,17 +206,17 @@
 	// If so, we can start a new calculation, otherwise, we replace the first operand with the result of the operation
     lastButtonPressWasPoint = NO;
     lastButtonPressWasResult = NO;
-	if (firstOperand == 0. && currentResult == 0.)
+	if (firstOperand == 0.)
 	{
 		firstOperand = [self.numberTextField.text doubleValue];
 		currentOperation = sender.tag;
 	}
     
-    else if (firstOperand == 0.)
-    {
-        firstOperand = currentResult;
-		currentOperation = sender.tag;
-    }
+//    else if (firstOperand == 0.)
+//    {
+//        firstOperand = currentResult;
+//		currentOperation = sender.tag;
+//    }
     
     // only execute operation if previous button pressed was a number
 	else if (lastButtonPressWasNumber)
@@ -289,7 +290,7 @@
 	else {
 		self.numberTextField.text = [self.numberTextField.text stringByAppendingFormat:@"%i", sender.tag];
 	}
-    
+    currentValueInTextfield = [self.numberTextField.text doubleValue];
     // remove unnecessary leading zeros
     self.numberTextField.text = [NSString removeLeadingZerosFromString:self.numberTextField.text];
     [self saveState];
