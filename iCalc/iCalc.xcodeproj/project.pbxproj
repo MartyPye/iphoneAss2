@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		34B4F4B118225D3100ED3AE0 /* Data.plist in Resources */ = {isa = PBXBuildFile; fileRef = 34B4F4B018225D3100ED3AE0 /* Data.plist */; };
+		34B4F4B218225D8E00ED3AE0 /* Data.plist in Resources */ = {isa = PBXBuildFile; fileRef = 34B4F4B018225D3100ED3AE0 /* Data.plist */; };
 		40022408181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 40022407181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.m */; };
 		4002240F181FEF7900DF5BF6 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4002240E181FEF7900DF5BF6 /* XCTest.framework */; };
 		40022410181FEF7900DF5BF6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C6CBA75161F28DD0020BFF7 /* Foundation.framework */; };
@@ -38,6 +40,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		34B4F4B018225D3100ED3AE0 /* Data.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Data.plist; sourceTree = "<group>"; };
 		40022406181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+NSStringFormattingAdditions.h"; sourceTree = "<group>"; };
 		40022407181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+NSStringFormattingAdditions.m"; sourceTree = "<group>"; };
 		4002240D181FEF7900DF5BF6 /* iCalc Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "iCalc Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -104,6 +107,7 @@
 				40022414181FEF7900DF5BF6 /* iCalc Tests-Info.plist */,
 				40022415181FEF7900DF5BF6 /* InfoPlist.strings */,
 				4002241A181FEF7900DF5BF6 /* iCalc Tests-Prefix.pch */,
+				34B4F4B018225D3100ED3AE0 /* Data.plist */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -243,6 +247,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34B4F4B118225D3100ED3AE0 /* Data.plist in Resources */,
 				40022417181FEF7900DF5BF6 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -251,6 +256,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34B4F4B218225D8E00ED3AE0 /* Data.plist in Resources */,
 				4C6CBA7E161F28DD0020BFF7 /* InfoPlist.strings in Resources */,
 				4C6CBA86161F28DD0020BFF7 /* Default.png in Resources */,
 				4C6CBA88161F28DD0020BFF7 /* Default@2x.png in Resources */,
@@ -467,6 +473,7 @@
 				4002241F181FEF7900DF5BF6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4C6CBA69161F28DD0020BFF7 /* Build configuration list for PBXProject "iCalc" */ = {
 			isa = XCConfigurationList;
