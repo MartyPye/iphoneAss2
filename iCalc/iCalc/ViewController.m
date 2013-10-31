@@ -491,7 +491,7 @@
         [plistData writeToFile:plistPath atomically:YES];
     }
     else {
-        NSLog(error);
+        NSLog(@"%@",error);
     }
 }
 
