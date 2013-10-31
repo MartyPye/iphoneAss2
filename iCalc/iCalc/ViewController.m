@@ -346,25 +346,25 @@
 {
     switch (decimalPointCounter) {
         case 0:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.0f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.0f", [self.numberTextField.text doubleValue]];
             break;
         case 1:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.1f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.1f", [self.numberTextField.text doubleValue]];
             break;
         case 2:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.2f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.2f", [self.numberTextField.text doubleValue]];
             break;
         case 3:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.3f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.3f", [self.numberTextField.text doubleValue]];
             break;
         case 4:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.4f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.4f", [self.numberTextField.text doubleValue]];
             break;
         case 5:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.5f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.5f", [self.numberTextField.text doubleValue]];
             break;
         case 6:
-            self.numberTextField.text = [NSString stringWithFormat:@"%.6f", currentResult];
+            self.numberTextField.text = [NSString stringWithFormat:@"%.6f", [self.numberTextField.text doubleValue]];
             break;
         default:
             break;
