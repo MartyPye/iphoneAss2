@@ -163,6 +163,7 @@
             break;
     }
     
+    self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
     [self updateTextField];
     
     // register decimal point count in user defaults
@@ -367,7 +368,7 @@
     // Reset the internal state
     currentOperation = OP_NOOP;
     firstOperand = 0.;
-    currentResult = 0.; // DANGEROUS
+//    currentResult = 0.; // DANGEROUS
     lastToggledOperator.selected = NO;
     [self saveState];
     textFieldShouldBeCleared = YES;
