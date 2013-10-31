@@ -166,7 +166,12 @@
         default:
             break;
     }
-    
+    if (lastButtonPressWasNumber) {
+        self.numberTextField.text = [NSString stringWithFormat:@"%f", [self.numberTextField.text doubleValue]];
+    }
+    else {
+        self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+    }
     [self updateTextField];
     
     // register decimal point count in user defaults
@@ -332,13 +337,24 @@
         }
     }
     
-    // left arrow
-    else {
-        if (posInHistory > 0) {
-            posInHistory--;
-            currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
-            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-            [self updateTextField];
+    if (historyOfResults != nil) {
+        if (sender.tag == 15) {
+            if (posInHistory < historyOfResults.count - 1) {
+                posInHistory++;
+                currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+                self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+                [self updateTextField];
+            }
+        }
+        
+        // left arrow
+        else {
+            if (posInHistory > 0) {
+                posInHistory--;
+                currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+                self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+                [self updateTextField];
+            }
         }
     }
 }
@@ -372,7 +388,7 @@
     // Reset the internal state
     currentOperation = OP_NOOP;
     firstOperand = 0.;
-    currentResult = 0.; // DANGEROUS
+//    currentResult = 0.; // DANGEROUS
     lastToggledOperator.selected = NO;
     [self saveState];
     textFieldShouldBeCleared = YES;
