@@ -18,5 +18,7 @@
 - (IBAction)decimalPointEntered:(UIButton *) sender;
 - (IBAction)clearDisplay:(id)sender;
 
+-(void)storeHistory;
+
 
 @end
