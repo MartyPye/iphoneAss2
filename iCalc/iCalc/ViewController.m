@@ -53,73 +53,10 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    textFieldShouldBeCleared = YES;
+    [self restoreCalculatorValues];
     
-	// Do any additional setup after loading the view, typically from a nib.
-//	currentOperation = OP_NOOP;
-//	textFieldShouldBeCleared = NO;
-    
-    currentResult = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentResult"];
-    self.numberTextField.text = [[NSUserDefaults standardUserDefaults] stringForKey:@"NumberTextField"];
-    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
-    lastPressedOperatorTag = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedOperatorTag"];
-    
-    
-    NSString *errorDesc = nil;
-    NSPropertyListFormat format;
-    NSString *plistPath;
-    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-                                                              NSUserDomainMask, YES) objectAtIndex:0];
-    plistPath = [rootPath stringByAppendingPathComponent:@"Data.plist"];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
-        plistPath = [[NSBundle mainBundle] pathForResource:@"Data" ofType:@"plist"];
-    }
-    NSData *plistXML = [[NSFileManager defaultManager] contentsAtPath:plistPath];
-    NSDictionary *temp = (NSDictionary *)[NSPropertyListSerialization
-                                          propertyListFromData:plistXML
-                                          mutabilityOption:NSPropertyListMutableContainersAndLeaves
-                                          format:&format
-                                          errorDescription:&errorDesc];
-    if (!temp) {
-        NSLog(@"Error reading plist: %@, format: %d", errorDesc, format);
-    }
-    historyOfResults = (NSMutableArray*)[temp objectForKey:@"history"];
-    NSNumber* num = [temp objectForKey:@"posInHistory"];
-    posInHistory = [num integerValue];
-    
-    if (!historyOfResults)
-        historyOfResults = [NSMutableArray arrayWithCapacity:10];
-    
-    //NSLog(@"pos: %d", posInHistory);
-    //NSLog(@"Elements: %@", historyOfResults);
-    
-    [self updateArrowLabels];
-    
-    if (anOperatorWasPressed) {
-        switch (lastPressedOperatorTag) {
-            case 11:
-                self.plusButton.selected = YES;
-                currentOperation = OP_ADD;
-                break;
-            case 12:
-                self.minusButton.selected = YES;
-                currentOperation = OP_SUB;
-                break;
-            case 13:
-                self.multButton.selected = YES;
-                currentOperation = OP_MULT;
-                break;
-            case 14:
-                self.divButton.selected = YES;
-                currentOperation = OP_DIV;
-                break;
-            default:
-                break;
-        }
-        textFieldShouldBeCleared = YES;
-    }
-    firstOperand = [[NSUserDefaults standardUserDefaults] doubleForKey:@"FirstOperand"];
-    // load the amount of decimal points (user preference)
-    decimalPointCounter = [[NSUserDefaults standardUserDefaults] integerForKey:@"AmountOfDecimalPoints"];
+    [self updateTextField];
     
     // swipe gesture recognizers
     // NOTE: Observe how target-action is established in the code below. This is equivalent to dragging connections in the Interface Builder.
@@ -177,7 +114,7 @@
     [self updateTextField];
     
     // register decimal point count in user defaults
-    [self saveState];
+    [self saveCalculatorValues];
     
 }
 
@@ -200,7 +137,7 @@
     sender.selected = YES;
     lastToggledOperator = sender;
     lastPressedOperatorTag = lastToggledOperator.tag;
-    [self saveState];
+    [self saveCalculatorValues];
 	// Have a look at the tag-property of the buttons calling this method
 	
 	// Once a button is pressed, we check if the first operand is zero
@@ -236,15 +173,16 @@
             [self resetCalculator];
         }
         
-        lastButtonPressWasNumber = NO;
+        
 	}
     
     else if (lastButtonPressWasOperator) {
         currentOperation = sender.tag;
     }
     
-    [self saveState];
+    [self saveCalculatorValues];
     
+    lastButtonPressWasNumber = NO;
 	textFieldShouldBeCleared = YES;
     lastButtonPressWasOperator = YES;
 }
@@ -259,7 +197,7 @@
             double result = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
             currentResult = result;
             [self addResultToHistory:currentResult];
-            [self saveState];
+            [self saveCalculatorValues];
             self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
             [self updateTextField];
 //            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",result];
@@ -296,7 +234,9 @@
     currentValueInTextfield = [self.numberTextField.text doubleValue];
     // remove unnecessary leading zeros
     self.numberTextField.text = [NSString removeLeadingZerosFromString:self.numberTextField.text];
-    [self saveState];
+    
+    [self updateTextField];
+    [self saveCalculatorValues];
     lastButtonPressWasNumber = YES;
 }
 
@@ -308,7 +248,7 @@
         self.numberTextField.text = [self.numberTextField.text stringByAppendingString:@"."];
         lastButtonPressWasPoint = YES;
     }
-    [self saveState];
+    [self saveCalculatorValues];
 }
 
 // The parameter type id says that any object can be sender of this method.
@@ -326,12 +266,14 @@
     self.minusButton.selected = NO;
     self.multButton.selected = NO;
     self.divButton.selected = NO;
-    [self saveState];
+    textFieldShouldBeCleared = YES;
+    [self updateTextField];
+    [self saveCalculatorValues];
 }
 
 - (IBAction)arrowPressed:(UIButton*)sender {
     // right arrow
-    if (historyOfResults != nil) {
+    if (historyOfResults != nil && historyOfResults.count != 0) {
         if (sender.tag == 15) {
             if (posInHistory < historyOfResults.count - 1) {
                 posInHistory++;
@@ -386,7 +328,7 @@
     firstOperand = 0.;
 //    currentResult = 0.; // DANGEROUS
     lastToggledOperator.selected = NO;
-    [self saveState];
+    [self saveCalculatorValues];
     textFieldShouldBeCleared = YES;
     lastButtonPressWasResult = YES;
 }
@@ -422,7 +364,7 @@
     [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
 }
 
-- (void) saveState;
+- (void) saveCalculatorValues;
 {
     [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:currentResult] forKey:@"CurrentResult"];
@@ -430,6 +372,69 @@
     [[NSUserDefaults standardUserDefaults] setInteger:lastPressedOperatorTag forKey:@"LastPressedOperatorTag"];
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:decimalPointCounter] forKey:@"AmountOfDecimalPoints"];
     [[NSUserDefaults standardUserDefaults] setDouble:firstOperand forKey:@"FirstOperand"];
+}
+
+- (void) restoreCalculatorValues;
+{
+    currentResult = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentResult"];
+    self.numberTextField.text = [[NSUserDefaults standardUserDefaults] stringForKey:@"NumberTextField"];
+    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
+    lastPressedOperatorTag = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedOperatorTag"];
+    
+    
+    NSString *errorDesc = nil;
+    NSPropertyListFormat format;
+    NSString *plistPath;
+    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                              NSUserDomainMask, YES) objectAtIndex:0];
+    plistPath = [rootPath stringByAppendingPathComponent:@"Data.plist"];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
+        plistPath = [[NSBundle mainBundle] pathForResource:@"Data" ofType:@"plist"];
+    }
+    NSData *plistXML = [[NSFileManager defaultManager] contentsAtPath:plistPath];
+    NSDictionary *temp = (NSDictionary *)[NSPropertyListSerialization
+                                          propertyListFromData:plistXML
+                                          mutabilityOption:NSPropertyListMutableContainersAndLeaves
+                                          format:&format
+                                          errorDescription:&errorDesc];
+    if (!temp) {
+        NSLog(@"Error reading plist: %@, format: %d", errorDesc, format);
+    }
+    historyOfResults = (NSMutableArray*)[temp objectForKey:@"history"];
+    NSNumber* num = [temp objectForKey:@"posInHistory"];
+    posInHistory = [num integerValue];
+    
+    if (!historyOfResults)
+        historyOfResults = [NSMutableArray arrayWithCapacity:10];
+    
+    [self updateArrowLabels];
+    
+    if (anOperatorWasPressed) {
+        switch (lastPressedOperatorTag) {
+            case 11:
+                self.plusButton.selected = YES;
+                currentOperation = OP_ADD;
+                break;
+            case 12:
+                self.minusButton.selected = YES;
+                currentOperation = OP_SUB;
+                break;
+            case 13:
+                self.multButton.selected = YES;
+                currentOperation = OP_MULT;
+                break;
+            case 14:
+                self.divButton.selected = YES;
+                currentOperation = OP_DIV;
+                break;
+            default:
+                break;
+        }
+        textFieldShouldBeCleared = YES;
+    }
+    firstOperand = [[NSUserDefaults standardUserDefaults] doubleForKey:@"FirstOperand"];
+    // load the amount of decimal points (user preference)
+    decimalPointCounter = [[NSUserDefaults standardUserDefaults] integerForKey:@"AmountOfDecimalPoints"];
 }
 
 - (void) deselectAllButtons;
