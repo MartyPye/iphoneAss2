@@ -162,8 +162,12 @@
         default:
             break;
     }
-    
-    self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+    if (lastButtonPressWasNumber) {
+        self.numberTextField.text = [NSString stringWithFormat:@"%f", [self.numberTextField.text doubleValue]];
+    }
+    else {
+        self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
+    }
     [self updateTextField];
     
     // register decimal point count in user defaults
