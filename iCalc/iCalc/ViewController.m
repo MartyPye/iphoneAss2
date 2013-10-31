@@ -295,6 +295,7 @@
         if (posInHistory < historyOfResults.count - 1) {
             posInHistory++;
             currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
             [self updateTextField];
         }
     }
@@ -304,6 +305,7 @@
         if (posInHistory > 0) {
             posInHistory--;
             currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
+            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
             [self updateTextField];
         }
     }
