@@ -236,7 +236,7 @@
             [self resetCalculator];
         }
         
-        lastButtonPressWasNumber = NO;
+        
 	}
     
     else if (lastButtonPressWasOperator) {
@@ -244,7 +244,7 @@
     }
     
     [self saveState];
-    
+    lastButtonPressWasNumber = NO;
 	textFieldShouldBeCleared = YES;
     lastButtonPressWasOperator = YES;
 }
