@@ -453,6 +453,7 @@
         [historyOfResults addObject:[NSNumber numberWithDouble:theResult]];
     }
     
+    posInHistory = historyOfResults.count - 1;
     [self updateArrowLabels];
 }
 
