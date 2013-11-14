@@ -8,6 +8,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "ResultManager.h"
 
 //This is the set of operations we support
 typedef enum BCOperator : NSUInteger {
@@ -45,9 +46,17 @@ typedef enum BCOperator : NSUInteger {
 @property (strong) NSNumber *lastOperand;
 @property (strong) NSNumber *lastResult;        // Task 1.3: Use this property for KVO
 
+
 - (void)setFirstOperand:(NSNumber*)anOperand;
-- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand;
+- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand andStoreResultInHistory:(BOOL)shouldStoreResult;
 - (void)reset;
+- (void) goToNextResult;
+- (void) goToPreviousResult;
+- (NSUInteger) currentPositionInHistory;
+- (NSUInteger) historySize;
+
+- (void) saveState;
+- (void) restoreState;
 
 
 @end

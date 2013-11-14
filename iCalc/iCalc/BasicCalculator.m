@@ -9,8 +9,14 @@
 
 #import "BasicCalculator.h"
 
+@interface BasicCalculator()
 
-#pragma mark Object Lifecycle
+@property (strong) ResultManager *resultManager;
+
+@end
+
+
+#pragma mark - Object Lifecycle
 @implementation BasicCalculator
 
 
@@ -21,6 +27,16 @@
 		self.lastOperand = [NSNumber numberWithInt:0];
 		self.delegate = nil;
 		self.rememberLastResult = YES;
+        self.lastResult = [[NSNumber alloc] init];
+        self.resultManager = [[ResultManager alloc] init];
+        
+        // add observer
+        [self addObserver:self.resultManager forKeyPath:@"lastResult"
+                             options:NSKeyValueObservingOptionNew
+                             context:nil];
+        
+        [self restoreState];
+        
 	}
 	return self;
 }
@@ -34,10 +50,10 @@
 }
 
 
-#pragma mark Method implementation
+#pragma mark - Method implementation
 
 // ----------------------------------------------------------------------------------------------------
-//Set our lastOperand cache to be another operand
+// Set our lastOperand cache to be another operand
 // ----------------------------------------------------------------------------------------------------
 - (void)setFirstOperand:(NSNumber*)anOperand;
 {
@@ -49,21 +65,21 @@
 // This method performs an operation with the given operation and the second operand. 
 // After the operation is performed, the result is written to lastOperand
 // ----------------------------------------------------------------------------------------------------
-- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand;
+- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand andStoreResultInHistory:(BOOL)shouldStoreResult;
 {
 	NSNumber *result;
     switch (operation) {
         case BCOperatorAddition:
-            result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] + [operand doubleValue])]; //this is autoreleased
-            self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
+            result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] + [operand doubleValue])];
+            self.lastOperand = result;
             break;
         case BCOperatorSubtraction:
-            result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] - [operand doubleValue])]; //this is autoreleased
-            self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
+            result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] - [operand doubleValue])];
+            self.lastOperand = result;
             break;
         case BCOperatorMultiplication:
-            result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] * [operand doubleValue])]; //this is autoreleased
-            self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
+            result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] * [operand doubleValue])];
+            self.lastOperand = result;
             break;
         case BCOperatorDivision:
             if ([operand doubleValue] == 0) {
@@ -72,27 +88,35 @@
             else {
                 result = [NSNumber numberWithDouble:([self.lastOperand doubleValue] / [operand doubleValue])];
             }
-            self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
+            self.lastOperand = result;
             break;
         default:
             break;
     }
     
-    // TODO: add result to History
+    // store result in the history
+    if (shouldStoreResult) {
+        BOOL resultIsNumber = ![result isEqualToNumber:[NSDecimalNumber notANumber]];
+        if (resultIsNumber) {
+            // at this point, KVO fires. Result manager is informed
+            self.lastResult = result;
+        }
+    }
 	
 	[self notifyDelegateOfResult:result];
-	
-
 }
 
-
-// This method clears everything (for the moment 
+// ----------------------------------------------------------------------------------------------------
+// This method clears everything (for the moment)
+// ----------------------------------------------------------------------------------------------------
 - (void)reset;
 {
 	self.lastOperand = [NSNumber numberWithInt:0];
 }
 
+// ----------------------------------------------------------------------------------------------------
 // The following method is shamelessly modified from http://www.programmingsimplified.com/c/source-code/c-program-for-prime-number
+// ----------------------------------------------------------------------------------------------------
 - (BOOL)checkPrime:(NSInteger)theInteger;
 {
     NSInteger checkValue;
@@ -114,6 +138,61 @@
     }
     
     return result;
+}
+
+- (void) goToPreviousResult;
+{
+    // get the next result from history
+    NSNumber *previousResult = [self.resultManager getPreviousResult];
+    
+    [self setFirstOperand:previousResult];
+    [self notifyDelegateOfResult:previousResult];
+}
+
+-(void) goToNextResult;
+{
+    // get the next result from history
+    NSNumber *nextResult = [self.resultManager getNextResult];
+    
+    [self setFirstOperand:nextResult];
+    [self notifyDelegateOfResult:nextResult];
+}
+
+- (NSUInteger) currentPositionInHistory;
+{
+    NSUInteger currentPositionInHistory;
+    currentPositionInHistory = [self.resultManager currentPositionInHistory];
+    return currentPositionInHistory;
+}
+
+// ----------------------------------------------------------------------------------------------------
+// Returns the current size of the result history
+// ----------------------------------------------------------------------------------------------------
+- (NSUInteger) historySize;
+{
+    return [self.resultManager historySize];
+}
+
+// ----------------------------------------------------------------------------------------------------
+// Saves the state of the calculator to NSUserDefaults
+// ----------------------------------------------------------------------------------------------------
+- (void) saveState;
+{
+    [[NSUserDefaults standardUserDefaults] setObject:self.lastResult forKey:@"lastResult"];
+    [[NSUserDefaults standardUserDefaults] setObject:self.lastOperand forKey:@"lastOperand"];
+    
+    // forward saveState to result manager
+    [self.resultManager saveState];
+
+}
+
+- (void) restoreState;
+{
+    self.lastResult     = [[NSUserDefaults standardUserDefaults] objectForKey:@"lastResult"];
+    self.lastOperand    = [[NSUserDefaults standardUserDefaults] objectForKey:@"lastOperand"];
+    
+    // forward restore to result manager
+    [self.resultManager restoreState];
 }
 
 - (void) notifyDelegateOfResult:(NSNumber*)theResult;

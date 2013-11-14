@@ -23,8 +23,6 @@
 	BOOL textFieldShouldBeCleared;
     UIButton *lastToggledOperator;
     NSUInteger lastPressedOperatorTag;
-    NSMutableArray *historyOfResults;
-    NSUInteger posInHistory;
     
     // used for keeping track how many decimal points should be shown (swiping)
     int decimalPointPrecision;
@@ -36,6 +34,7 @@
     
     
 }
+
 @property (weak, nonatomic) IBOutlet UIButton *plusButton;
 @property (weak, nonatomic) IBOutlet UIButton *minusButton;
 @property (weak, nonatomic) IBOutlet UIButton *multButton;
@@ -53,76 +52,9 @@
 {
     [super viewDidLoad];
     
-	// Do any additional setup after loading the view, typically from a nib.
-//	currentOperation = OP_NOOP;
-//	textFieldShouldBeCleared = NO;
-    
     self.calculator = [[BasicCalculator alloc] init];
     
-    currentResult = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentResult"];
-    self.numberTextField.text = [[NSUserDefaults standardUserDefaults] stringForKey:@"NumberTextField"];
-    lastPressedOperatorTag = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedOperatorTag"];
     self.calculator.delegate = self;
-    
-    
-    NSString *errorDesc = nil;
-    NSPropertyListFormat format;
-    NSString *plistPath;
-    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-                                                              NSUserDomainMask, YES) objectAtIndex:0];
-    plistPath = [rootPath stringByAppendingPathComponent:@"Data.plist"];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
-        plistPath = [[NSBundle mainBundle] pathForResource:@"Data" ofType:@"plist"];
-    }
-    NSData *plistXML = [[NSFileManager defaultManager] contentsAtPath:plistPath];
-    NSDictionary *temp = (NSDictionary *)[NSPropertyListSerialization
-                                          propertyListFromData:plistXML
-                                          mutabilityOption:NSPropertyListMutableContainersAndLeaves
-                                          format:&format
-                                          errorDescription:&errorDesc];
-    if (!temp) {
-        NSLog(@"Error reading plist: %@, format: %d", errorDesc, format);
-    }
-    historyOfResults = (NSMutableArray*)[temp objectForKey:@"history"];
-    NSNumber* num = [temp objectForKey:@"posInHistory"];
-    posInHistory = [num integerValue];
-    
-    if (!historyOfResults)
-        historyOfResults = [NSMutableArray arrayWithCapacity:10];
-    
-    //NSLog(@"pos: %d", posInHistory);
-    //NSLog(@"Elements: %@", historyOfResults);
-    
-    [self updateArrowLabels];
-    
-    // restore the state of the operators, if they were pressed before closing.
-    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
-    if (anOperatorWasPressed) {
-        switch (lastPressedOperatorTag) {
-            case 11:
-                self.plusButton.selected = YES;
-                currentOperation = OP_ADD;
-                break;
-            case 12:
-                self.minusButton.selected = YES;
-                currentOperation = OP_SUB;
-                break;
-            case 13:
-                self.multButton.selected = YES;
-                currentOperation = OP_MULT;
-                break;
-            case 14:
-                self.divButton.selected = YES;
-                currentOperation = OP_DIV;
-                break;
-            default:
-                break;
-        }
-        textFieldShouldBeCleared = YES;
-    }
-//    firstOperand = [[NSUserDefaults standardUserDefaults] doubleForKey:@"FirstOperand"];
-    // load the amount of decimal points (user preference)
-    decimalPointPrecision = [[NSUserDefaults standardUserDefaults] integerForKey:@"AmountOfDecimalPoints"];
     
     // swipe gesture recognizers
     // NOTE: Observe how target-action is established in the code below. This is equivalent to dragging connections in the Interface Builder.
@@ -137,9 +69,6 @@
     
     [self.view addGestureRecognizer:leftSwipeRecognizer];
     [self.view addGestureRecognizer:rightSwipeRecognizer];
-    
-    
-    
 }
 
 - (void)didReceiveMemoryWarning
@@ -194,10 +123,6 @@
         self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
     }
     [self applyRoundingToTextfield];
-    
-    // register decimal point count in user defaults
-    [self saveState];
-    
 }
 
 #pragma mark - UI response operations
@@ -213,7 +138,6 @@
     sender.selected = YES;
     lastToggledOperator = sender;
     lastPressedOperatorTag = lastToggledOperator.tag;
-    [self saveState];
     
     // A new sum should be started
     if ([self.calculator.lastOperand doubleValue] == 0) {
@@ -227,12 +151,11 @@
     // when an operation should be performed with the previous result
 	else if (lastPressedButtonType == NumberButton)	{
         NSNumber *secondOperand = [NSNumber numberWithDouble:[self.numberTextField.text doubleValue]];
-        [self.calculator performOperation:currentOperation withOperand:secondOperand];
+        [self.calculator performOperation:currentOperation withOperand:secondOperand andStoreResultInHistory:NO];
 	}
     
     currentOperation = [self getOperatorFromButton:sender];
     
-    [self saveState];
 	textFieldShouldBeCleared = YES;
     lastPressedButtonType = OperatorButton;
 }
@@ -247,9 +170,7 @@
     // make sure multiple consecutive result button pressing is ignored
     if (lastPressedButtonType != ResultButton) {
         
-//        if (!(([secondOperand doubleValue] == 0) && currentOperation == BCOperatorDivision)) {
-        [self.calculator performOperation:currentOperation withOperand:secondOperand];
-//        }
+        [self.calculator performOperation:currentOperation withOperand:secondOperand andStoreResultInHistory:YES];
         
         [self resetCalculator];
     }
@@ -283,21 +204,27 @@
     
     // remove unnecessary leading zeros
     self.numberTextField.text = [NSString stringByRemovingLeadingZerosFromString:self.numberTextField.text];
-    [self saveState];
+    
     lastPressedButtonType = NumberButton;
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+// Gets called when a decimal point is entered
+// ----------------------------------------------------------------------------------------------------
 - (IBAction)decimalPointEntered:(UIButton *) sender;
 {
     if (lastPressedButtonType != PointButton) {
         self.numberTextField.text = [self.numberTextField.text stringByAppendingString:@"."];
     }
     lastPressedButtonType = PointButton;
-    [self saveState];
+//    [self saveState];
 }
 
-// The parameter type id says that any object can be sender of this method.
-// As we do not need the pointer to the clear button here, it is not really important.
+
+// ----------------------------------------------------------------------------------------------------
+// Gets called when C is pressed
+// ----------------------------------------------------------------------------------------------------
 - (IBAction)clearDisplay:(UIButton*)sender {
     lastPressedButtonType = ClearButton;
 
@@ -308,30 +235,22 @@
     
 	self.numberTextField.text = @"0";
     [self deselectAllButtons];
-    [self saveState];
 }
 
-- (IBAction)arrowPressed:(UIButton*)sender {
+
+// ----------------------------------------------------------------------------------------------------
+// Gets called when an arrow button is pressed
+// ----------------------------------------------------------------------------------------------------
+- (IBAction)arrowPressed:(UIButton*)sender
+{
     // right arrow
-    if (historyOfResults != nil) {
-        if (sender.tag == 15) {
-            if (posInHistory < historyOfResults.count - 1) {
-                posInHistory++;
-                currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
-                self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-                [self applyRoundingToTextfield];
-            }
-        }
-        
-        // left arrow
-        else {
-            if (posInHistory > 0) {
-                posInHistory--;
-                currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
-                self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-                [self applyRoundingToTextfield];
-            }
-        }
+    if (sender.tag == 15) {
+        [self.calculator goToNextResult];
+    }
+    
+    // left arrow
+    else {
+        [self.calculator goToPreviousResult];
     }
     
     [self updateArrowLabels];
@@ -345,7 +264,7 @@
     currentOperation = BCOperatorNoOperation;
     [self.calculator reset];
     lastToggledOperator.selected = NO;
-    [self saveState];
+//    [self saveState];
     textFieldShouldBeCleared = YES;
 }
 
@@ -383,18 +302,70 @@
     [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
 }
 
+// ----------------------------------------------------------------------------------------------------
+// Gets called before app is terminated, saves all relevant values, and forwards to calculator
+// ----------------------------------------------------------------------------------------------------
 - (void) saveState;
 {
-    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:currentResult] forKey:@"CurrentResult"];
-    [[NSUserDefaults standardUserDefaults] setBool:lastToggledOperator.selected forKey:@"LastToggledOperatorSelected"];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:tentativeOperand] forKey:@"TentativeOperand"];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%@", self.numberTextField.text] forKey:@"NumberTextField"];
     [[NSUserDefaults standardUserDefaults] setInteger:lastPressedOperatorTag forKey:@"LastPressedOperatorTag"];
-//    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:decimalPointCounter] forKey:@"AmountOfDecimalPoints"];
-//    [[NSUserDefaults standardUserDefaults] setDouble:firstOperand forKey:@"FirstOperand"];
+    [[NSUserDefaults standardUserDefaults] setInteger:decimalPointPrecision forKey:@"decimalPointPrecision"];
+    [[NSUserDefaults standardUserDefaults] setInteger:lastPressedButtonType forKey:@"LastPressedButtonType"];
+    [[NSUserDefaults standardUserDefaults] setInteger:currentOperation forKey:@"CurrentOperation"];
+    
+    [[NSUserDefaults standardUserDefaults] setBool:lastToggledOperator.selected forKey:@"LastToggledOperatorSelected"];
+    
+    [self.calculator saveState];
 }
 
 // ----------------------------------------------------------------------------------------------------
-// deselects all the buttons
+// Gets called when app is resumed, restores all relevant values, and forwards to calculator
+// ----------------------------------------------------------------------------------------------------
+- (void) restoreState;
+{
+    currentResult               = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentResult"];
+    tentativeOperand            = [[NSUserDefaults standardUserDefaults] integerForKey:@"TentativeOperand"];
+    self.numberTextField.text   = [[NSUserDefaults standardUserDefaults] stringForKey:@"NumberTextField"];
+    lastPressedOperatorTag      = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedOperatorTag"];
+    decimalPointPrecision       = [[NSUserDefaults standardUserDefaults] integerForKey:@"decimalPointPrecision"];
+    lastPressedButtonType       = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedButtonType"];
+    currentOperation            = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentOperation"];
+    
+    // restore the state of the operators, if they were pressed before closing.
+    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
+    if (anOperatorWasPressed) {
+        switch (lastPressedOperatorTag) {
+            case 11:
+                self.plusButton.selected = YES;
+                currentOperation = BCOperatorAddition;
+                break;
+            case 12:
+                self.minusButton.selected = YES;
+                currentOperation = BCOperatorSubtraction;
+                break;
+            case 13:
+                self.multButton.selected = YES;
+                currentOperation = BCOperatorMultiplication;
+                break;
+            case 14:
+                self.divButton.selected = YES;
+                currentOperation = BCOperatorDivision;
+                break;
+            default:
+                break;
+        }
+        textFieldShouldBeCleared = YES;
+    }
+    
+    [self.calculator restoreState];
+    
+    [self updateArrowLabels];
+}
+
+// ----------------------------------------------------------------------------------------------------
+// Deselects all the buttons
 // ----------------------------------------------------------------------------------------------------
 - (void) deselectAllButtons;
 {
@@ -405,27 +376,16 @@
     self.divButton.selected = NO;
 }
 
-- (void) addResultToHistory: (double) theResult;
-{
-    if (historyOfResults.count < 10) {
-        [historyOfResults addObject:[NSNumber numberWithDouble:theResult]];
-        posInHistory = historyOfResults.count - 1;
-    }
-    
-    else {
-        [historyOfResults removeObjectAtIndex:0];
-        [historyOfResults addObject:[NSNumber numberWithDouble:theResult]];
-    }
-    
-    posInHistory = historyOfResults.count - 1;
-    [self updateArrowLabels];
-}
-
+// ----------------------------------------------------------------------------------------------------
+// Update the arrow labels with appropriate values
+// ----------------------------------------------------------------------------------------------------
 - (void) updateArrowLabels;
 {
-    self.leftArrowLabel.text = [NSString stringWithFormat:@"%i", posInHistory];
-    self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", historyOfResults.count - 1 - posInHistory];
-    if (historyOfResults.count == 0)
+    NSUInteger currentPositionInHistory = [self.calculator currentPositionInHistory];
+    NSLog(@"%i", currentPositionInHistory);
+    self.leftArrowLabel.text = [NSString stringWithFormat:@"%i", currentPositionInHistory];
+    self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", [self.calculator historySize] - 1 - currentPositionInHistory];
+    if ([self.calculator historySize] == 0)
         self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", 0];
 }
 
@@ -434,28 +394,10 @@
     return YES;
 }
 
--(void)storeHistory
-{
-    //NSLog(@"results: %@", historyOfResults);
-    
-    NSString *error;
-    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *plistPath = [rootPath stringByAppendingPathComponent:@"Data.plist"];
-    NSDictionary *plistDict = [NSDictionary dictionaryWithObjects:
-                               [NSArray arrayWithObjects: historyOfResults, [[NSNumber alloc] initWithInt:posInHistory], nil]
-                                                          forKeys:[NSArray arrayWithObjects: @"history", @"posInHistory", nil]];
-    NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:plistDict
-                                                                   format:NSPropertyListXMLFormat_v1_0
-                                                         errorDescription:&error];
-    if(plistData) {
-        [plistData writeToFile:plistPath atomically:YES];
-    }
-    else {
-        NSLog(@"%@", error);
-    }
-}
 
-// detects the operator from the button tag
+// ----------------------------------------------------------------------------------------------------
+// Detects the operator from the button tag
+// ----------------------------------------------------------------------------------------------------
 - (BCOperator) getOperatorFromButton: (UIButton *)theButton;
 {
     BCOperator theOperator = BCOperatorNoOperation;
@@ -479,7 +421,10 @@
 }
 
 #pragma mark - Delegate Methods
+
+// ----------------------------------------------------------------------------------------------------
 // called by the BasicCalculator whenever it has finished calculating a result
+// ----------------------------------------------------------------------------------------------------
 - (void) operationDidCompleteWithResult:(NSNumber *)result;
 {
     // keep this value with full precision, so swiping can be performed without precision loss

@@ -30,7 +30,8 @@ typedef enum BCButtonType : NSUInteger {
 - (IBAction)decimalPointEntered:(UIButton *) sender;
 - (IBAction)clearDisplay:(id)sender;
 
--(void)storeHistory;
+- (void) saveState;
+- (void) restoreState;
 
 
 @end
