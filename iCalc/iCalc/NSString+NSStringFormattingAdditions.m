@@ -10,7 +10,7 @@
 
 @implementation NSString (NSStringFormattingAdditions)
 
-+ (NSString*) removeLeadingZerosFromString:(NSString*)aString;
++ (NSString*) stringByRemovingLeadingZerosFromString:(NSString*)aString;
 {
     NSArray *floatStringComps = [aString componentsSeparatedByString:@"."];
     
@@ -27,7 +27,8 @@
     }
 }
 
-+ (NSString*) removeDanglingZerosFromDecimalString:(NSString*)aString;
+
++ (NSString*) stringByRemovingDanglingZerosFromDecimalString:(NSString*)aString;
 {
     NSArray *floatStringComps = [aString componentsSeparatedByString:@"."];
     

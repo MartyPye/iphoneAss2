@@ -7,10 +7,22 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BasicCalculator.h"
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController <BasicCalculatorDelegate>
+
+typedef enum BCButtonType : NSUInteger {
+	OperatorButton,
+	NumberButton,
+	PointButton,
+	ResultButton,
+    ClearButton
+} BCButtonType;
+
 
 @property (weak, nonatomic) IBOutlet UITextField *numberTextField;
+
+@property (strong, nonatomic) BasicCalculator *calculator;
 
 - (IBAction)operationButtonPressed:(UIButton *)sender;
 - (IBAction)resultButtonPressed:(UIButton *)sender;

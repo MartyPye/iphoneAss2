@@ -18,24 +18,22 @@
 
 @interface ViewController ()
 {
-	// The following variables do not need to be exposed in the public interface
-	// that's why we define them in this class extension in the implementation file.
-	double firstOperand;
-	unsigned char currentOperation;
+    BCOperator currentOperation;
+    BCButtonType lastPressedButtonType;
 	BOOL textFieldShouldBeCleared;
-    BOOL lastButtonPressWasPoint;
-    BOOL lastButtonPressWasOperator;
-    BOOL lastButtonPressWasNumber;
-    BOOL lastButtonPressWasResult;
     UIButton *lastToggledOperator;
-    // used for the swipe gesture
-    NSUInteger decimalPointCounter;
-    // saves exact value so that decreasing and increasing decimalPoint counter doesn't loose precision
-    double currentResult;
     NSUInteger lastPressedOperatorTag;
     NSMutableArray *historyOfResults;
     NSUInteger posInHistory;
-    double currentValueInTextfield;
+    
+    // used for keeping track how many decimal points should be shown (swiping)
+    int decimalPointPrecision;
+    
+    // saves exact value so that decreasing and increasing decimalPoint counter doesn't loose precision
+    double currentResult;
+    double tentativeOperand;
+    
+    
     
 }
 @property (weak, nonatomic) IBOutlet UIButton *plusButton;
@@ -44,6 +42,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *divButton;
 @property (weak, nonatomic) IBOutlet UILabel *leftArrowLabel;
 @property (weak, nonatomic) IBOutlet UILabel *rightArrowLabel;
+
 
 @end
 
@@ -58,10 +57,12 @@
 //	currentOperation = OP_NOOP;
 //	textFieldShouldBeCleared = NO;
     
+    self.calculator = [[BasicCalculator alloc] init];
+    
     currentResult = [[NSUserDefaults standardUserDefaults] integerForKey:@"CurrentResult"];
     self.numberTextField.text = [[NSUserDefaults standardUserDefaults] stringForKey:@"NumberTextField"];
-    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
     lastPressedOperatorTag = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastPressedOperatorTag"];
+    self.calculator.delegate = self;
     
     
     NSString *errorDesc = nil;
@@ -94,6 +95,8 @@
     
     [self updateArrowLabels];
     
+    // restore the state of the operators, if they were pressed before closing.
+    BOOL anOperatorWasPressed = [[NSUserDefaults standardUserDefaults] boolForKey:@"LastToggledOperatorSelected"];
     if (anOperatorWasPressed) {
         switch (lastPressedOperatorTag) {
             case 11:
@@ -117,9 +120,9 @@
         }
         textFieldShouldBeCleared = YES;
     }
-    firstOperand = [[NSUserDefaults standardUserDefaults] doubleForKey:@"FirstOperand"];
+//    firstOperand = [[NSUserDefaults standardUserDefaults] doubleForKey:@"FirstOperand"];
     // load the amount of decimal points (user preference)
-    decimalPointCounter = [[NSUserDefaults standardUserDefaults] integerForKey:@"AmountOfDecimalPoints"];
+    decimalPointPrecision = [[NSUserDefaults standardUserDefaults] integerForKey:@"AmountOfDecimalPoints"];
     
     // swipe gesture recognizers
     // NOTE: Observe how target-action is established in the code below. This is equivalent to dragging connections in the Interface Builder.
@@ -139,8 +142,18 @@
     
 }
 
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
 
 #pragma mark - handle gestures
+
+// ----------------------------------------------------------------------------------------------------
+// Handles the swiping gesture
+// ----------------------------------------------------------------------------------------------------
 - (void)handleGesture:(UIGestureRecognizer *)gestureRecognizer;
 {
     // ignore other gesture recognizer
@@ -153,139 +166,110 @@
     
     switch (swipeRecognizer.direction)
     {
+            
+            // swiped left: "I want more decimal points"
         case UISwipeGestureRecognizerDirectionLeft:
         {
             NSLog(@"left swipe");
-            if (decimalPointCounter < 6) decimalPointCounter++;
+            if (decimalPointPrecision < 6) decimalPointPrecision++;
             break;
         }
+            
+            // swiped right: "I want less decimal points"
         case UISwipeGestureRecognizerDirectionRight:
         {
             NSLog(@"right swipe");
-            if (decimalPointCounter > 0) decimalPointCounter--;
+            if (decimalPointPrecision > 0) decimalPointPrecision--;
             break;
         }
         default:
             break;
     }
-    if (lastButtonPressWasNumber) {
-        self.numberTextField.text = [NSString stringWithFormat:@"%f", currentValueInTextfield];
+    
+    // first restore textfield with full decimal precision, then apply appropriate rounding
+    if (lastPressedButtonType == NumberButton) {
+        self.numberTextField.text = [NSString stringWithFormat:@"%f", tentativeOperand];
     }
     else {
         self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
     }
-    [self updateTextField];
+    [self applyRoundingToTextfield];
     
     // register decimal point count in user defaults
     [self saveState];
     
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
 #pragma mark - UI response operations
-/*	This method get's called whenever an operation button is pressed
- *	The sender object is a pointer to the calling button in this case. 
- *	This way, you can easily change the buttons color or other properties
- */
+
+
+// ----------------------------------------------------------------------------------------------------
+// Gets called when an operation button is pressed.
+// ----------------------------------------------------------------------------------------------------
 - (IBAction)operationButtonPressed:(UIButton *)sender;
 {
     // toggle the selected operation button
-
     [self deselectAllButtons];
-    
     sender.selected = YES;
     lastToggledOperator = sender;
     lastPressedOperatorTag = lastToggledOperator.tag;
     [self saveState];
-	// Have a look at the tag-property of the buttons calling this method
-	
-	// Once a button is pressed, we check if the first operand is zero
-	// If so, we can start a new calculation, otherwise, we replace the first operand with the result of the operation
-    lastButtonPressWasPoint = NO;
-    lastButtonPressWasResult = NO;
-	if (firstOperand == 0.)
-	{
-		firstOperand = [self.numberTextField.text doubleValue];
-		currentOperation = sender.tag;
-	}
     
-//    else if (firstOperand == 0.)
-//    {
-//        firstOperand = currentResult;
-//		currentOperation = sender.tag;
-//    }
-    
-    // only execute operation if previous button pressed was a number
-	else if (lastButtonPressWasNumber)
-	{
-        if (!([self.numberTextField.text doubleValue] == 0 && currentOperation == OP_DIV)) {
-            firstOperand = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
-            currentResult = firstOperand;
-            currentOperation = sender.tag;
-            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-//            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",firstOperand];
-//            self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
-        }
-        
-        else {
-            self.numberTextField.text = @"Error";
-            [self resetCalculator];
-        }
-        
-        
-	}
-    
-    else if (lastButtonPressWasOperator) {
-        currentOperation = sender.tag;
+    // A new sum should be started
+    if ([self.calculator.lastOperand doubleValue] == 0) {
+        // set first operand to Number in textfield
+        NSNumber *firstOperand = [NSNumber numberWithDouble:[self.numberTextField.text doubleValue]];
+        [self.calculator setFirstOperand:firstOperand];
+        currentOperation = [self getOperatorFromButton:sender];
     }
     
+    
+    // when an operation should be performed with the previous result
+	else if (lastPressedButtonType == NumberButton)	{
+        NSNumber *secondOperand = [NSNumber numberWithDouble:[self.numberTextField.text doubleValue]];
+        [self.calculator performOperation:currentOperation withOperand:secondOperand];
+	}
+    
+    currentOperation = [self getOperatorFromButton:sender];
+    
     [self saveState];
-    lastButtonPressWasNumber = NO;
 	textFieldShouldBeCleared = YES;
-    lastButtonPressWasOperator = YES;
+    lastPressedButtonType = OperatorButton;
 }
 
+// ----------------------------------------------------------------------------------------------------
+// Gets called when the result button is pressed
+// ----------------------------------------------------------------------------------------------------
 - (IBAction)resultButtonPressed:(id)sender {
-	
-    lastButtonPressWasNumber = NO;
-    lastButtonPressWasOperator = NO;
-	// Just calculate the result
-    if (!lastButtonPressWasResult) {
-        if (!([self.numberTextField.text doubleValue] == 0 && currentOperation == OP_DIV)) {
-            double result = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text doubleValue]];
-            currentResult = result;
-            [self addResultToHistory:currentResult];
-            [self saveState];
-            self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-            [self updateTextField];
-//            self.numberTextField.text = [NSString stringWithFormat:@"%.6f",result];
-            // remove dangling decimal zeros
-            // self.numberTextField.text = [NSString removeDanglingZerosFromDecimalString:self.numberTextField.text];
-        }
+    
+    NSNumber *secondOperand = [NSNumber numberWithDouble:[self.numberTextField.text doubleValue]];
+    
+    // make sure multiple consecutive result button pressing is ignored
+    if (lastPressedButtonType != ResultButton) {
         
-        else {
-            self.numberTextField.text = @"Error";
-        }
+//        if (!(([secondOperand doubleValue] == 0) && currentOperation == BCOperatorDivision)) {
+        [self.calculator performOperation:currentOperation withOperand:secondOperand];
+//        }
         
         [self resetCalculator];
     }
     
+    lastPressedButtonType = ResultButton;
     [self updateArrowLabels];
 
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+// Gets called when a number is entered
+// ----------------------------------------------------------------------------------------------------
 - (IBAction)numberEntered:(UIButton *)sender {
     
-    lastButtonPressWasOperator = NO;
-    lastButtonPressWasResult = NO;
+    // deselect all the operator buttons
     [self deselectAllButtons];
-	// If the textField is to be cleared, just replace it with the pressed number
-	if (textFieldShouldBeCleared)
-	{
+    
+	// If it's a new sum, just replace it with the pressed number
+	if (textFieldShouldBeCleared) {
 		self.numberTextField.text = [NSString stringWithFormat:@"%i",sender.tag];
 		textFieldShouldBeCleared = NO;
 	}
@@ -293,39 +277,37 @@
 	else {
 		self.numberTextField.text = [self.numberTextField.text stringByAppendingFormat:@"%i", sender.tag];
 	}
-    currentValueInTextfield = [self.numberTextField.text doubleValue];
+    
+    // this makes sure the full number is stored (e.g. 5.65656) and can be restored after swiping of decimal points.
+    tentativeOperand = [self.numberTextField.text doubleValue];
+    
     // remove unnecessary leading zeros
-    self.numberTextField.text = [NSString removeLeadingZerosFromString:self.numberTextField.text];
+    self.numberTextField.text = [NSString stringByRemovingLeadingZerosFromString:self.numberTextField.text];
     [self saveState];
-    lastButtonPressWasNumber = YES;
+    lastPressedButtonType = NumberButton;
 }
 
 - (IBAction)decimalPointEntered:(UIButton *) sender;
 {
-    lastButtonPressWasOperator = NO;
-    lastButtonPressWasNumber = NO;
-    if (!lastButtonPressWasPoint) {
+    if (lastPressedButtonType != PointButton) {
         self.numberTextField.text = [self.numberTextField.text stringByAppendingString:@"."];
-        lastButtonPressWasPoint = YES;
     }
+    lastPressedButtonType = PointButton;
     [self saveState];
 }
 
 // The parameter type id says that any object can be sender of this method.
 // As we do not need the pointer to the clear button here, it is not really important.
 - (IBAction)clearDisplay:(UIButton*)sender {
-    lastButtonPressWasNumber = NO;
-    lastButtonPressWasOperator = NO;
-    lastButtonPressWasPoint = NO;
-	firstOperand = 0;
+    lastPressedButtonType = ClearButton;
+
+    // clear the first Operand
+    [self.calculator setFirstOperand:0];
     currentResult = 0;
-	currentOperation = OP_NOOP;
+	currentOperation = BCOperatorNoOperation;
+    
 	self.numberTextField.text = @"0";
-    lastToggledOperator.selected = NO;
-    self.plusButton.selected = NO;
-    self.minusButton.selected = NO;
-    self.multButton.selected = NO;
-    self.divButton.selected = NO;
+    [self deselectAllButtons];
     [self saveState];
 }
 
@@ -337,7 +319,7 @@
                 posInHistory++;
                 currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
                 self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-                [self updateTextField];
+                [self applyRoundingToTextfield];
             }
         }
         
@@ -347,7 +329,7 @@
                 posInHistory--;
                 currentResult = [[historyOfResults objectAtIndex:posInHistory] doubleValue];
                 self.numberTextField.text = [NSString stringWithFormat:@"%f", currentResult];
-                [self updateTextField];
+                [self applyRoundingToTextfield];
             }
         }
     }
@@ -357,43 +339,22 @@
 
 
 #pragma mark - General Methods
-// This method returns the result of the specified operation
-// It is placed here since it is needed in two other methods
-- (double)executeOperation:(char)operation withArgument:(double)firstArgument andSecondArgument:(double)secondArgument;
-{
-	switch (operation) {
-		case OP_ADD:
-			return firstArgument + secondArgument;
-			break;
-		case OP_SUB:
-			return firstArgument - secondArgument;
-            break;
-        case OP_MULT:
-            return firstArgument * secondArgument;
-            break;
-        case OP_DIV:
-            return firstArgument / secondArgument;
-		default:
-			return NAN;
-			break;
-	}
-}
-
 - (void) resetCalculator;
 {
     // Reset the internal state
-    currentOperation = OP_NOOP;
-    firstOperand = 0.;
-//    currentResult = 0.; // DANGEROUS
+    currentOperation = BCOperatorNoOperation;
+    [self.calculator reset];
     lastToggledOperator.selected = NO;
     [self saveState];
     textFieldShouldBeCleared = YES;
-    lastButtonPressWasResult = YES;
 }
 
-- (void) updateTextField;
+// ----------------------------------------------------------------------------------------------------
+// applies the appropriate rounding to the textfield
+// ----------------------------------------------------------------------------------------------------
+- (void) applyRoundingToTextfield;
 {
-    switch (decimalPointCounter) {
+    switch (decimalPointPrecision) {
         case 0:
             self.numberTextField.text = [NSString stringWithFormat:@"%.0f", [self.numberTextField.text doubleValue]];
             break;
@@ -428,10 +389,13 @@
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:currentResult] forKey:@"CurrentResult"];
     [[NSUserDefaults standardUserDefaults] setBool:lastToggledOperator.selected forKey:@"LastToggledOperatorSelected"];
     [[NSUserDefaults standardUserDefaults] setInteger:lastPressedOperatorTag forKey:@"LastPressedOperatorTag"];
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:decimalPointCounter] forKey:@"AmountOfDecimalPoints"];
-    [[NSUserDefaults standardUserDefaults] setDouble:firstOperand forKey:@"FirstOperand"];
+//    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:decimalPointCounter] forKey:@"AmountOfDecimalPoints"];
+//    [[NSUserDefaults standardUserDefaults] setDouble:firstOperand forKey:@"FirstOperand"];
 }
 
+// ----------------------------------------------------------------------------------------------------
+// deselects all the buttons
+// ----------------------------------------------------------------------------------------------------
 - (void) deselectAllButtons;
 {
     lastToggledOperator.selected = NO;
@@ -490,5 +454,51 @@
         NSLog(@"%@", error);
     }
 }
+
+// detects the operator from the button tag
+- (BCOperator) getOperatorFromButton: (UIButton *)theButton;
+{
+    BCOperator theOperator = BCOperatorNoOperation;
+    switch (theButton.tag) {
+        case OP_ADD:
+            theOperator = BCOperatorAddition;
+            break;
+        case OP_SUB:
+            theOperator = BCOperatorSubtraction;
+            break;
+        case OP_MULT:
+            theOperator = BCOperatorMultiplication;
+            break;
+        case OP_DIV:
+            theOperator = BCOperatorDivision;
+            break;
+        default:
+            break;
+    }
+    return theOperator;
+}
+
+#pragma mark - Delegate Methods
+// called by the BasicCalculator whenever it has finished calculating a result
+- (void) operationDidCompleteWithResult:(NSNumber *)result;
+{
+    // keep this value with full precision, so swiping can be performed without precision loss
+    currentResult = [result doubleValue];
+    
+    // update textfield with the result;
+    BOOL resultIsNaN = [result isEqualToNumber:[NSDecimalNumber notANumber]];
+    if (resultIsNaN) {
+        self.numberTextField.text = @"Error";
+        [self resetCalculator];
+    }
+    else {
+        self.numberTextField.text = [NSString stringWithFormat:@"%@", result];
+        // apply appropriate rounding to textfield
+        [self applyRoundingToTextfield];
+    }
+    
+    
+}
+
 
 @end

@@ -16,6 +16,7 @@
 		40022417181FEF7900DF5BF6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 40022415181FEF7900DF5BF6 /* InfoPlist.strings */; };
 		40022419181FEF7900DF5BF6 /* iCalc_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 40022418181FEF7900DF5BF6 /* iCalc_Tests.m */; };
 		40022421181FEF9C00DF5BF6 /* testCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = 40022420181FEF9C00DF5BF6 /* testCalculator.m */; };
+		40AF15461833C073002B3899 /* BasicCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AF15451833C073002B3899 /* BasicCalculator.m */; };
 		4C6CBA74161F28DD0020BFF7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C6CBA73161F28DD0020BFF7 /* UIKit.framework */; };
 		4C6CBA76161F28DD0020BFF7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C6CBA75161F28DD0020BFF7 /* Foundation.framework */; };
 		4C6CBA78161F28DD0020BFF7 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C6CBA77161F28DD0020BFF7 /* CoreGraphics.framework */; };
@@ -50,6 +51,8 @@
 		40022418181FEF7900DF5BF6 /* iCalc_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iCalc_Tests.m; sourceTree = "<group>"; };
 		4002241A181FEF7900DF5BF6 /* iCalc Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iCalc Tests-Prefix.pch"; sourceTree = "<group>"; };
 		40022420181FEF9C00DF5BF6 /* testCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = testCalculator.m; path = "iCalc Tests/testCalculator.m"; sourceTree = "<group>"; };
+		40AF15441833C073002B3899 /* BasicCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BasicCalculator.h; sourceTree = "<group>"; };
+		40AF15451833C073002B3899 /* BasicCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BasicCalculator.m; sourceTree = "<group>"; };
 		4C6CBA6F161F28DD0020BFF7 /* iCalc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iCalc.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C6CBA73161F28DD0020BFF7 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		4C6CBA75161F28DD0020BFF7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -150,6 +153,8 @@
 				4C6CBA83161F28DD0020BFF7 /* AppDelegate.m */,
 				4C6CBA8B161F28DD0020BFF7 /* ViewController.h */,
 				4C6CBA8C161F28DD0020BFF7 /* ViewController.m */,
+				40AF15441833C073002B3899 /* BasicCalculator.h */,
+				40AF15451833C073002B3899 /* BasicCalculator.m */,
 				40022406181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.h */,
 				40022407181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.m */,
 				4C6CBA8E161F28DD0020BFF7 /* ViewController.xib */,
@@ -283,6 +288,7 @@
 			files = (
 				4C6CBA80161F28DD0020BFF7 /* main.m in Sources */,
 				4C6CBA84161F28DD0020BFF7 /* AppDelegate.m in Sources */,
+				40AF15461833C073002B3899 /* BasicCalculator.m in Sources */,
 				40022408181FE9B900DF5BF6 /* NSString+NSStringFormattingAdditions.m in Sources */,
 				4C6CBA8D161F28DD0020BFF7 /* ViewController.m in Sources */,
 			);

@@ -10,7 +10,7 @@
 
 @interface NSString (NSStringFormattingAdditions)
 
-+ (NSString*) removeLeadingZerosFromString:(NSString*)aString;
-+ (NSString*) removeDanglingZerosFromDecimalString:(NSString*)aString;
++ (NSString*) stringByRemovingLeadingZerosFromString:(NSString*)aString;
++ (NSString*) stringByRemovingDanglingZerosFromDecimalString:(NSString*)aString;
 
 @end
