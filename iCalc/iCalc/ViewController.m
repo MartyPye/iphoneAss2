@@ -386,7 +386,6 @@
 - (void) updateArrowLabels;
 {
     NSUInteger currentPositionInHistory = [self.calculator currentPositionInHistory];
-    NSLog(@"%i", currentPositionInHistory);
     self.leftArrowLabel.text = [NSString stringWithFormat:@"%i", currentPositionInHistory];
     self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", [self.calculator historySize] - 1 - currentPositionInHistory];
     if ([self.calculator historySize] == 0)
@@ -425,6 +424,7 @@
 }
 
 #pragma mark - Basic calculator delegate methods
+// ----------------------------------------------------------------------------------------------------
 // called by the BasicCalculator whenever it has finished calculating a result
 // ----------------------------------------------------------------------------------------------------
 - (void) operationDidCompleteWithResult:(NSNumber *)result;

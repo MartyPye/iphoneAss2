@@ -30,6 +30,7 @@
 		self.lastOperand = [NSNumber numberWithInt:0];
 		self.delegate = nil;
 		self.rememberLastResult = YES;
+<<<<<<< HEAD
         self.lastResult = [[NSNumber alloc] init];
         self.resultManager = [[ResultManager alloc] init];
         
@@ -40,11 +41,13 @@
         
         [self restoreState];
         
+=======
         
         // Initialize the queue and set the maximum concurrent operation limit
         myQueue = [[NSOperationQueue alloc] init];
         myQueue.name = @"Check Prime Queue";
         myQueue.MaxConcurrentOperationCount = 1;
+>>>>>>> part2
 	}
 	return self;
 }
@@ -102,6 +105,7 @@
             break;
     }
     
+<<<<<<< HEAD
     // store result in the history
     if (shouldStoreResult) {
         BOOL resultIsNumber = ![result isEqualToNumber:[NSDecimalNumber notANumber]];
@@ -112,10 +116,18 @@
     }
 	
 	[self notifyDelegateOfResult:result];
+=======
+    
+    
+    
+    // TODO: add result to History
+	
+	[self notifyDelegateOfResult:result];
 	
     [_delegate willPrimeCheckNumber:self.lastOperand];
     //[self checkByGCD];
     [self checkByOpQueue];
+>>>>>>> part2
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -296,7 +308,6 @@
 - (BOOL)checkPrimeAllowCancel:(NSInteger)theInteger;
 {
     // Task 2.4 (extra credit)
-    return NO;
 }
 
 - (void)checkPerserveOrder;
