@@ -42,6 +42,8 @@
 @property (weak, nonatomic) IBOutlet UIButton *divButton;
 @property (weak, nonatomic) IBOutlet UILabel *leftArrowLabel;
 @property (weak, nonatomic) IBOutlet UILabel *rightArrowLabel;
+@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
+@property (strong, nonatomic) IBOutlet UILabel *checkingPrimeLabel;
 
 
 @end
@@ -138,8 +140,8 @@
     [self.view addGestureRecognizer:leftSwipeRecognizer];
     [self.view addGestureRecognizer:rightSwipeRecognizer];
     
-    
-    
+    // hide the spinner at start
+    self.spinner.hidden = YES;
 }
 
 - (void)didReceiveMemoryWarning
@@ -147,7 +149,6 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 
 #pragma mark - handle gestures
 
@@ -256,7 +257,7 @@
     
     lastPressedButtonType = ResultButton;
     [self updateArrowLabels];
-
+    
 }
 
 
@@ -478,9 +479,9 @@
     return theOperator;
 }
 
-#pragma mark - Delegate Methods
+#pragma mark - Basic calculator delegate methods
 // called by the BasicCalculator whenever it has finished calculating a result
-- (void) operationDidCompleteWithResult:(NSNumber *)result;
+- (void) operationDidCompleteWithResult:(NSNumber *)result
 {
     // keep this value with full precision, so swiping can be performed without precision loss
     currentResult = [result doubleValue];
@@ -496,9 +497,25 @@
         // apply appropriate rounding to textfield
         [self applyRoundingToTextfield];
     }
-    
-    
 }
 
+#pragma mark - Prime checker delegate methods
+- (void)didPrimeCheckNumber:(NSNumber *)theNumber result:(BOOL)theIsPrime
+{
+    if (theIsPrime)
+        self.checkingPrimeLabel.text = [NSString stringWithFormat:@"%@ is a prime.", theNumber];
+    else
+        self.checkingPrimeLabel.text = [NSString stringWithFormat:@"%@ is not a prime.", theNumber];
+    
+    self.spinner.hidden = YES;
+    [self.spinner stopAnimating];
+}
+
+- (void)willPrimeCheckNumber:(NSNumber *)theNumber
+{
+    self.checkingPrimeLabel.text = [NSString stringWithFormat:@"Checking if %@ is a prime", theNumber];
+    self.spinner.hidden = NO;
+    [self.spinner startAnimating];
+}
 
 @end

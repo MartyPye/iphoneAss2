@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "BasicCalculator.h"
 
-@interface ViewController : UIViewController <BasicCalculatorDelegate>
+@interface ViewController : UIViewController <BasicCalculatorDelegate, PrimeCalculatorDelegate>
 
 typedef enum BCButtonType : NSUInteger {
 	OperatorButton,

@@ -41,7 +41,7 @@ typedef enum BCOperator : NSUInteger {
 @interface BasicCalculator : NSObject 
 
 @property (assign) BOOL rememberLastResult;
-@property (strong) id<BasicCalculatorDelegate> delegate;
+@property (strong) id<BasicCalculatorDelegate, PrimeCalculatorDelegate> delegate;
 @property (strong) NSNumber *lastOperand;
 @property (strong) NSNumber *lastResult;        // Task 1.3: Use this property for KVO
 

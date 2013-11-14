@@ -12,7 +12,10 @@
 
 #pragma mark Object Lifecycle
 @implementation BasicCalculator
+{
+    NSOperationQueue *myQueue;
 
+}
 
 - (id)init
 {
@@ -21,6 +24,11 @@
 		self.lastOperand = [NSNumber numberWithInt:0];
 		self.delegate = nil;
 		self.rememberLastResult = YES;
+        
+        
+        myQueue = [[NSOperationQueue alloc] init];
+        myQueue.name = @"Check Prime Queue";
+        myQueue.MaxConcurrentOperationCount = 1;
 	}
 	return self;
 }
@@ -78,11 +86,16 @@
             break;
     }
     
+    
+    
+    
     // TODO: add result to History
 	
 	[self notifyDelegateOfResult:result];
 	
-
+    [_delegate willPrimeCheckNumber:self.lastOperand];
+    [self checkByGCD];
+    //[self checkByOpQueue];
 }
 
 
@@ -140,15 +153,63 @@
  // NOTE: you may change the signature of the following methods. Just keep the given name as a substring.
 // -----------------------------------------------------------------------------------------------------------------
 
+
 - (void)checkByGCD;
 {
     // Task 2.2
+    NSLog(@"Queue: lastOperand: %@", self.lastOperand);
+    __block NSNumber* lastOperand = [self.lastOperand copy];
+    
+    dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    dispatch_async(globalQueue, ^{
+            BOOL result = [self checkPrime:[lastOperand integerValue]];
+            // Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
+            if (_delegate != nil) {
+                if ([_delegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+                {
+                    //while(1);
+                    [_delegate didPrimeCheckNumber:lastOperand result:result];
+                }
+                else {
+                    NSLog(@"WARNING: the BasicCalculator delegate does not implement didPrimeCheckNumber:");
+                }
+            }
+            else {
+                NSLog(@"WARNING: the BasicCalculator delegate is nil");
+            }
+    });
 }
 
 - (void)checkByOpQueue;
 {
     // Task 2.3
+    
+    [myQueue cancelAllOperations];
+    
+    NSLog(@"Queue: lastOperand: %@", self.lastOperand);
+    __block NSNumber* lastOperand = [self.lastOperand copy];
+    // Add an operation as a block to a queue
+    [myQueue addOperationWithBlock: ^ {
+        BOOL result = [self checkPrime:[lastOperand integerValue]];
+        // Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
+        if (_delegate != nil) {
+            if ([_delegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+            {
+                //while(1);
+                [_delegate didPrimeCheckNumber:lastOperand result:result];
+                
+            }
+            else {
+                NSLog(@"WARNING: the BasicCalculator delegate does not implement didPrimeCheckNumber:");
+            }
+        }
+        else {
+            NSLog(@"WARNING: the BasicCalculator delegate is nil");
+        }
+    }];
 }
+
 
 - (BOOL)checkPrimeAllowCancel:(NSInteger)theInteger;
 {
