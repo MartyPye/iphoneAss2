@@ -28,6 +28,9 @@
 	return self;
 }
 
+// ----------------------------------------------------------------------------------------------------
+// Get the next result. If it's the last result, just return that one.
+// ----------------------------------------------------------------------------------------------------
 - (NSNumber*) getNextResult;
 {
     if (self.currentPositionInHistory < historyOfResults.count - 1) {
@@ -37,7 +40,9 @@
     return [historyOfResults objectAtIndex:self.currentPositionInHistory];
 }
 
-
+// ----------------------------------------------------------------------------------------------------
+// Get the previous result. If it's the first one, just return that one.
+// ----------------------------------------------------------------------------------------------------
 - (NSNumber*) getPreviousResult;
 {
     if (self.currentPositionInHistory > 0) {
@@ -47,12 +52,18 @@
     return [historyOfResults objectAtIndex:self.currentPositionInHistory];
 }
 
+// ----------------------------------------------------------------------------------------------------
+// Returns the current size of the history array
+// ----------------------------------------------------------------------------------------------------
 - (NSUInteger) historySize;
 {
     return historyOfResults.count;
 }
 
 
+// ----------------------------------------------------------------------------------------------------
+// Adds a new result to the history. If the history is full, it removes the oldest value.
+// ----------------------------------------------------------------------------------------------------
 - (void) addNewResultToHistory:(NSNumber*)theResult;
 {
     // history still has space
@@ -70,7 +81,9 @@
     self.currentPositionInHistory = historyOfResults.count - 1;
 }
 
-// receive KVO notification
+// ----------------------------------------------------------------------------------------------------
+// Receive KVO notification
+// ----------------------------------------------------------------------------------------------------
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
 {
     if ([keyPath isEqual:@"lastResult"]) {
@@ -79,8 +92,9 @@
     }
 }
 
+
 // ----------------------------------------------------------------------------------------------------
-// Saves the state of to NSUserDefaults
+// Saves the state to NSUserDefaults
 // ----------------------------------------------------------------------------------------------------
 - (void) saveState;
 {
@@ -89,6 +103,10 @@
     [self storeHistory];
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+// Restore the state from NSUserDefaults
+// ----------------------------------------------------------------------------------------------------
 - (void) restoreState;
 {
     self.currentPositionInHistory = [[NSUserDefaults standardUserDefaults] integerForKey:@"currentPositionInHistory"];
@@ -96,6 +114,10 @@
     [self restoreHistory];
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+// Store history array to plist
+// ----------------------------------------------------------------------------------------------------
 - (void) storeHistory
 {
     NSString *error;
@@ -115,6 +137,10 @@
     }
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+// Restore history array from plist
+// ----------------------------------------------------------------------------------------------------
 - (void) restoreHistory;
 {
     NSString *errorDesc = nil;

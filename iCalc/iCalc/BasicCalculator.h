@@ -41,7 +41,6 @@ typedef enum BCOperator : NSUInteger {
 // Task 1.1: Implement the model class
 @interface BasicCalculator : NSObject 
 
-@property (assign) BOOL rememberLastResult;
 @property (strong) id<BasicCalculatorDelegate, PrimeCalculatorDelegate> delegate;
 @property (strong) NSNumber *lastOperand;
 @property (strong) NSNumber *lastResult;        // Task 1.3: Use this property for KVO
@@ -50,6 +49,8 @@ typedef enum BCOperator : NSUInteger {
 - (void)setFirstOperand:(NSNumber*)anOperand;
 - (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand andStoreResultInHistory:(BOOL)shouldStoreResult;
 - (void)reset;
+
+// these methods are forwarded to the result manager
 - (void) goToNextResult;
 - (void) goToPreviousResult;
 - (NSUInteger) currentPositionInHistory;

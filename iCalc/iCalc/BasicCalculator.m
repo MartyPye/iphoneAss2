@@ -29,7 +29,6 @@
 	if (self != nil) {
 		self.lastOperand = [NSNumber numberWithInt:0];
 		self.delegate = nil;
-		self.rememberLastResult = YES;
         self.lastResult = [[NSNumber alloc] init];
         self.resultManager = [[ResultManager alloc] init];
         
@@ -126,6 +125,99 @@
 	self.lastOperand = [NSNumber numberWithInt:0];
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+// Get the previous result from the result manager
+// ----------------------------------------------------------------------------------------------------
+- (void) goToPreviousResult;
+{
+    // get the next result from history
+    NSNumber *previousResult = [self.resultManager getPreviousResult];
+    
+    [self setFirstOperand:previousResult];
+    [self notifyDelegateOfResult:previousResult];
+}
+
+
+// ----------------------------------------------------------------------------------------------------
+// Get the next result from the result manager
+// ----------------------------------------------------------------------------------------------------
+-(void) goToNextResult;
+{
+    // get the next result from history
+    NSNumber *nextResult = [self.resultManager getNextResult];
+    
+    [self setFirstOperand:nextResult];
+    [self notifyDelegateOfResult:nextResult];
+}
+
+
+// ----------------------------------------------------------------------------------------------------
+// Get the current position in history from the result manager.
+// ----------------------------------------------------------------------------------------------------
+- (NSUInteger) currentPositionInHistory;
+{
+    NSUInteger currentPositionInHistory;
+    currentPositionInHistory = [self.resultManager currentPositionInHistory];
+    return currentPositionInHistory;
+}
+
+
+// ----------------------------------------------------------------------------------------------------
+// Returns the current size of the result history
+// ----------------------------------------------------------------------------------------------------
+- (NSUInteger) historySize;
+{
+    return [self.resultManager historySize];
+}
+
+
+// ----------------------------------------------------------------------------------------------------
+// Saves the state of the calculator to NSUserDefaults
+// ----------------------------------------------------------------------------------------------------
+- (void) saveState;
+{
+    [[NSUserDefaults standardUserDefaults] setObject:self.lastResult forKey:@"lastResult"];
+    [[NSUserDefaults standardUserDefaults] setObject:self.lastOperand forKey:@"lastOperand"];
+    
+    // forward saveState to result manager
+    [self.resultManager saveState];
+    
+}
+
+// ----------------------------------------------------------------------------------------------------
+// Restore the state of the calculator from NSUserDefaults
+// ----------------------------------------------------------------------------------------------------
+- (void) restoreState;
+{
+    self.lastResult     = [[NSUserDefaults standardUserDefaults] objectForKey:@"lastResult"];
+    self.lastOperand    = [[NSUserDefaults standardUserDefaults] objectForKey:@"lastOperand"];
+    
+    // forward restore to result manager
+    [self.resultManager restoreState];
+}
+
+
+// ----------------------------------------------------------------------------------------------------
+// Notify the delegate of the result
+// ----------------------------------------------------------------------------------------------------
+- (void) notifyDelegateOfResult:(NSNumber*)theResult;
+{
+    // Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
+	if (_delegate != nil) {
+		if ([_delegate respondsToSelector:@selector(operationDidCompleteWithResult:)])
+		{
+			[_delegate operationDidCompleteWithResult:theResult];
+		}
+		else {
+			NSLog(@"WARNING: the BasicCalculator delegate does not implement operationDidCompleteWithResult:");
+		}
+	}
+	else {
+		NSLog(@"WARNING: the BasicCalculator delegate is nil");
+	}
+}
+
 // ----------------------------------------------------------------------------------------------------
 // The following method is shamelessly modified from http://www.programmingsimplified.com/c/source-code/c-program-for-prime-number
 // ----------------------------------------------------------------------------------------------------
@@ -150,78 +242,6 @@
     }
     
     return result;
-}
-
-- (void) goToPreviousResult;
-{
-    // get the next result from history
-    NSNumber *previousResult = [self.resultManager getPreviousResult];
-    
-    [self setFirstOperand:previousResult];
-    [self notifyDelegateOfResult:previousResult];
-}
-
--(void) goToNextResult;
-{
-    // get the next result from history
-    NSNumber *nextResult = [self.resultManager getNextResult];
-    
-    [self setFirstOperand:nextResult];
-    [self notifyDelegateOfResult:nextResult];
-}
-
-- (NSUInteger) currentPositionInHistory;
-{
-    NSUInteger currentPositionInHistory;
-    currentPositionInHistory = [self.resultManager currentPositionInHistory];
-    return currentPositionInHistory;
-}
-
-// ----------------------------------------------------------------------------------------------------
-// Returns the current size of the result history
-// ----------------------------------------------------------------------------------------------------
-- (NSUInteger) historySize;
-{
-    return [self.resultManager historySize];
-}
-
-// ----------------------------------------------------------------------------------------------------
-// Saves the state of the calculator to NSUserDefaults
-// ----------------------------------------------------------------------------------------------------
-- (void) saveState;
-{
-    [[NSUserDefaults standardUserDefaults] setObject:self.lastResult forKey:@"lastResult"];
-    [[NSUserDefaults standardUserDefaults] setObject:self.lastOperand forKey:@"lastOperand"];
-    
-    // forward saveState to result manager
-    [self.resultManager saveState];
-
-}
-
-- (void) restoreState;
-{
-    self.lastResult     = [[NSUserDefaults standardUserDefaults] objectForKey:@"lastResult"];
-    self.lastOperand    = [[NSUserDefaults standardUserDefaults] objectForKey:@"lastOperand"];
-    
-    // forward restore to result manager
-    [self.resultManager restoreState];
-}
-
-- (void) notifyDelegateOfResult:(NSNumber*)theResult;
-{
-    // Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
-	if (_delegate != nil) {
-		if ([_delegate respondsToSelector:@selector(operationDidCompleteWithResult:)])
-		{
-			[_delegate operationDidCompleteWithResult:theResult];
-		}
-		else {
-			NSLog(@"WARNING: the BasicCalculator delegate does not implement operationDidCompleteWithResult:");
-		}
-	}
-	else {
-		NSLog(@"WARNING: the BasicCalculator delegate is nil");
-	}
 }
 
 
