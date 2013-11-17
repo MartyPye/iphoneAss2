@@ -22,8 +22,10 @@
 	self = [super init];
 	if (self != nil) {
         historyOfResults = [NSMutableArray arrayWithCapacity:10];
+        
         self.currentPositionInHistory = 0;
         [self restoreState];
+        
 	}
 	return self;
 }
@@ -33,11 +35,15 @@
 // ----------------------------------------------------------------------------------------------------
 - (NSNumber*) getNextResult;
 {
-    if (self.currentPositionInHistory < historyOfResults.count - 1) {
+    if ((NSInteger)self.currentPositionInHistory < (NSInteger)historyOfResults.count - 1) {
         self.currentPositionInHistory++;
     }
     
-    return [historyOfResults objectAtIndex:self.currentPositionInHistory];
+    NSLog(@"pos: %d", self.currentPositionInHistory);
+    // check if current position is a valid index
+    if (self.currentPositionInHistory < [historyOfResults count])
+        return [historyOfResults objectAtIndex:self.currentPositionInHistory];
+    return nil;
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -48,8 +54,11 @@
     if (self.currentPositionInHistory > 0) {
         self.currentPositionInHistory--;
     }
-    
-    return [historyOfResults objectAtIndex:self.currentPositionInHistory];
+    NSLog(@"pos: %d", self.currentPositionInHistory);
+    // check if current position is a valid index
+    if (self.currentPositionInHistory < [historyOfResults count])
+        return [historyOfResults objectAtIndex:self.currentPositionInHistory];
+    return nil;
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -77,7 +86,6 @@
         [historyOfResults removeObjectAtIndex:0];
         [historyOfResults addObject:theResult];
     }
-    
     self.currentPositionInHistory = historyOfResults.count - 1;
 }
 
@@ -99,7 +107,6 @@
 - (void) saveState;
 {
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:self.currentPositionInHistory] forKey:@"currentPositionInHistory"];
-    
     [self storeHistory];
 }
 
@@ -123,9 +130,23 @@
     NSString *error;
     NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     NSString *plistPath = [rootPath stringByAppendingPathComponent:@"Data.plist"];
+    
+    
+    // the following is used for cleaning null values from the array
+    for (id obj in historyOfResults)
+    {
+        if ([obj isEqual:[NSNull null]])
+        {
+            [historyOfResults removeObject:obj];
+        }
+    }
+    
+    NSLog(@"history: %@, posInHistory: %@", historyOfResults, [[NSNumber alloc] initWithInt:self.currentPositionInHistory]);
+    
     NSDictionary *plistDict = [NSDictionary dictionaryWithObjects:
                                [NSArray arrayWithObjects: historyOfResults, [[NSNumber alloc] initWithInt:self.currentPositionInHistory], nil]
                                                           forKeys:[NSArray arrayWithObjects: @"history", @"posInHistory", nil]];
+    
     NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:plistDict
                                                                    format:NSPropertyListXMLFormat_v1_0
                                                          errorDescription:&error];
@@ -167,6 +188,8 @@
     
     if (!historyOfResults)
         historyOfResults = [NSMutableArray arrayWithCapacity:10];
+    
+    NSLog(@"data: %@", temp);
 }
 
 

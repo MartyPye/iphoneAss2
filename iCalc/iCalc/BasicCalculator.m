@@ -37,7 +37,7 @@
                              options:NSKeyValueObservingOptionNew
                              context:nil];
         
-        [self restoreState];
+        //[self restoreState];
         
         
         // Initialize the queue and set the maximum concurrent operation limit
@@ -103,8 +103,11 @@
     
     // store result in the history
     if (shouldStoreResult) {
-        BOOL resultIsNumber = ![result isEqualToNumber:[NSDecimalNumber notANumber]];
+        BOOL resultIsNumber = result && ![result isEqualToNumber:[NSDecimalNumber notANumber]] && ![result isEqual:[NSNull null]];
         if (resultIsNumber) {
+            
+            NSLog(@"Store number: %@", result);
+            
             // at this point, KVO fires. Result manager is informed
             self.lastResult = result;
         }
@@ -133,9 +136,12 @@
 {
     // get the next result from history
     NSNumber *previousResult = [self.resultManager getPreviousResult];
-    
-    [self setFirstOperand:previousResult];
-    [self notifyDelegateOfResult:previousResult];
+    // proceed only if the result is not nil
+    if (previousResult)
+    {
+        [self setFirstOperand:previousResult];
+        [self notifyDelegateOfResult:previousResult];
+    }
 }
 
 
@@ -146,9 +152,12 @@
 {
     // get the next result from history
     NSNumber *nextResult = [self.resultManager getNextResult];
-    
-    [self setFirstOperand:nextResult];
-    [self notifyDelegateOfResult:nextResult];
+    // proceed only if the result is not nil
+    if (nextResult)
+    {
+        [self setFirstOperand:nextResult];
+        [self notifyDelegateOfResult:nextResult];
+    }
 }
 
 

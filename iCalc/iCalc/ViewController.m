@@ -74,6 +74,9 @@
     
     // hide the spinner at start
     self.spinner.hidden = YES;
+    
+    
+    [self restoreState];
 }
 
 - (void)didReceiveMemoryWarning
@@ -386,6 +389,8 @@
 - (void) updateArrowLabels;
 {
     NSUInteger currentPositionInHistory = [self.calculator currentPositionInHistory];
+    
+    NSLog(@"Current pos in history: %d", currentPositionInHistory);    
     self.leftArrowLabel.text = [NSString stringWithFormat:@"%i", currentPositionInHistory];
     self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", [self.calculator historySize] - 1 - currentPositionInHistory];
     if ([self.calculator historySize] == 0)
@@ -449,9 +454,9 @@
 - (void)didPrimeCheckNumber:(NSNumber *)theNumber result:(BOOL)theIsPrime
 {
     if (theIsPrime)
-        self.checkingPrimeLabel.text = [NSString stringWithFormat:@"%@ is a prime.", theNumber];
+        self.checkingPrimeLabel.text = [NSString stringWithFormat:@"%d is a prime.", (NSInteger)([theNumber floatValue] + 0.5f)];
     else
-        self.checkingPrimeLabel.text = [NSString stringWithFormat:@"%@ is not a prime.", theNumber];
+        self.checkingPrimeLabel.text = [NSString stringWithFormat:@"%d is not a prime.", (NSInteger)([theNumber floatValue] + 0.5f)];
     
     self.spinner.hidden = YES;
     [self.spinner stopAnimating];
@@ -459,7 +464,7 @@
 
 - (void)willPrimeCheckNumber:(NSNumber *)theNumber
 {
-    self.checkingPrimeLabel.text = [NSString stringWithFormat:@"Checking if %@ is a prime", theNumber];
+    self.checkingPrimeLabel.text = [NSString stringWithFormat:@"Checking if %d is a prime", (NSInteger)([theNumber floatValue] + 0.5f)];
     self.spinner.hidden = NO;
     [self.spinner startAnimating];
 }
