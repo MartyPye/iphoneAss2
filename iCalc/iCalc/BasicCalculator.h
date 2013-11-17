@@ -39,7 +39,13 @@ typedef enum BCOperator : NSUInteger {
 
 
 // Task 1.1: Implement the model class
-@interface BasicCalculator : NSObject 
+@interface BasicCalculator : NSObject {
+    NSTimer *stopwatchTimer;
+    NSDate * startDate;
+    IBOutlet id elapsedTime;
+}
+
+- (void)startstop:(id)sender;
 
 @property (strong) id<BasicCalculatorDelegate, PrimeCalculatorDelegate> delegate;
 @property (strong) NSNumber *lastOperand;

@@ -447,6 +447,11 @@
         self.numberTextField.text = [NSString stringWithFormat:@"%@", result];
         // apply appropriate rounding to textfield
         [self applyRoundingToTextfield];
+        if (result == 0) {
+            self.checkingPrimeLabel.text = [NSString stringWithFormat:@"Calculation of %@ is stopped", result];
+            self.spinner.hidden = YES;
+            [self.spinner stopAnimating];
+        }
     }
 }
 

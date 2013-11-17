@@ -15,6 +15,7 @@
 
 @end
 
+int state = 1;
 
 #pragma mark - Object Lifecycle
 @implementation BasicCalculator
@@ -232,6 +233,8 @@
 // ----------------------------------------------------------------------------------------------------
 - (BOOL)checkPrime:(NSInteger)theInteger;
 {
+    while(1){
+    }
     NSInteger checkValue;
     BOOL result;
         
@@ -248,6 +251,7 @@
     }
     if (checkValue == theInteger)
     {
+        state=0;
         result = YES;
     }
     
@@ -344,6 +348,32 @@
     }
     
     return result;
+}
+
+- (void)startstop
+{
+    if(state == 1)
+    {
+        NSLog(@"Start timer.");
+        stopwatchTimer = [NSTimer scheduledTimerWithTimeInterval: 1 target:self
+                                                        selector:@selector(tick:) userInfo:nil repeats:YES];
+        startDate = [NSDate date];
+        [stopwatchTimer fire];
+    }
+    else
+    {
+        NSLog(@"Stop timer.");
+        [stopwatchTimer invalidate];
+        stopwatchTimer = nil;
+        startDate = nil;
+    } 
+}
+
+
+- (void)tick:(NSTimer *)theTimer
+{
+    NSTimeInterval interval = -[startDate timeIntervalSinceNow];
+    [self checkPrimeAllowCancel:interval];
 }
 
 - (void)checkPerserveOrder;
