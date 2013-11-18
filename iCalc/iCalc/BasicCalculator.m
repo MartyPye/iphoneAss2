@@ -15,13 +15,11 @@
 
 @end
 
-int state = 1;
-
 #pragma mark - Object Lifecycle
 @implementation BasicCalculator
 {
     NSOperationQueue *myQueue;
-
+    NSMutableArray *operationQueues;
 }
 
 - (id)init
@@ -45,6 +43,8 @@ int state = 1;
         myQueue = [[NSOperationQueue alloc] init];
         myQueue.name = @"Check Prime Queue";
         myQueue.MaxConcurrentOperationCount = 3;
+        
+        operationQueues = [[NSMutableArray alloc] init];
 	}
 	return self;
 }
@@ -118,7 +118,11 @@ int state = 1;
 	
     [_delegate willPrimeCheckNumber:self.lastOperand];
     //[self checkByGCD];
-    [self checkByOpQueue];
+    //[self checkByOpQueue];
+    //BOOL res = [self checkPrimeAllowCancel:[self.lastOperand integerValue]];
+    [self checkPerserveOrder];
+    
+    
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -233,25 +237,21 @@ int state = 1;
 // ----------------------------------------------------------------------------------------------------
 - (BOOL)checkPrime:(NSInteger)theInteger;
 {
-    while(1){
-    }
     NSInteger checkValue;
     BOOL result;
-        
+    
     for (checkValue = 2 ; checkValue <= theInteger - 1 ; checkValue++)
     {
         if (theInteger % checkValue == 0)
         {
             result = NO;
-            sleep(2);    // uncomment this line to make the execution significantly longer for a more dramatic effect :D
             break;
         }
-        
+        sleep(1);    // uncomment this line to make the execution significantly longer for a more dramatic effect :D
         
     }
     if (checkValue == theInteger)
     {
-        state=0;
         result = YES;
     }
     
@@ -326,59 +326,68 @@ int state = 1;
 
 - (BOOL)checkPrimeAllowCancel:(NSInteger)theInteger;
 {
-    // Task 2.4 (extra credit)
-    NSInteger checkValue;
-    BOOL result;
-    
-    BOOL isCancelled = NO;
-    
-    for (checkValue = 2 ; checkValue <= theInteger - 1 ; checkValue++)
-    {
-        
-        if (theInteger % checkValue == 0)
-        {
-            result = NO;
-            sleep(2);    // uncomment this line to make the execution significantly longer for a more dramatic effect :D
-            break;
+    NSOperation *executingOperation = [[myQueue operations] lastObject];
+    [executingOperation cancel];
+    __block BOOL result;
+    NSOperation *operation = [[NSOperation alloc] init];
+    operation.completionBlock = ^{
+        result = [self checkPrime:theInteger];
+        if (_delegate != nil) {
+            if ([_delegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+            {
+                [_delegate didPrimeCheckNumber:@(theInteger) result:result];
+            }
+            else {
+                NSLog(@"WARNING: the BasicCalculator delegate does not implement didPrimeCheckNumber:");
+            }
         }
-    }
-    if (checkValue == theInteger)
-    {
-        result = YES;
-    }
+        else {
+            NSLog(@"WARNING: the BasicCalculator delegate is nil");
+        }
+    };
+    [myQueue addOperation:operation];
     
-    return result;
-}
-
-- (void)startstop
-{
-    if(state == 1)
-    {
-        NSLog(@"Start timer.");
-        stopwatchTimer = [NSTimer scheduledTimerWithTimeInterval: 1 target:self
-                                                        selector:@selector(tick:) userInfo:nil repeats:YES];
-        startDate = [NSDate date];
-        [stopwatchTimer fire];
-    }
-    else
-    {
-        NSLog(@"Stop timer.");
-        [stopwatchTimer invalidate];
-        stopwatchTimer = nil;
-        startDate = nil;
-    } 
-}
-
-
-- (void)tick:(NSTimer *)theTimer
-{
-    NSTimeInterval interval = -[startDate timeIntervalSinceNow];
-    [self checkPrimeAllowCancel:interval];
+    return YES;
 }
 
 - (void)checkPerserveOrder;
 {
     // Task 2.5 (extra credit)
+    
+    __block NSNumber* lastOperand = [self.lastOperand copy];
+    NSOperation *operation = [[NSOperation alloc] init];
+    operation.completionBlock = ^{
+            BOOL result = [self checkPrime:[lastOperand integerValue]];
+            // Notify the delegate in the main thread since UI updates must be perfomed there.
+            // Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
+        
+        NSLog(@"The number %d is %@ prime", [lastOperand integerValue], result ? @"a" : @"not a"  );
+            if (_delegate != nil) {
+                if ([_delegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+                {
+                    [_delegate didPrimeCheckNumber:lastOperand result:result];
+                }
+            else {
+                NSLog(@"WARNING: the BasicCalculator delegate does not implement didPrimeCheckNumber:");
+            }
+        }
+        else {
+            NSLog(@"WARNING: the BasicCalculator delegate is nil");
+        }
+    };
+    // add dependencies
+    for (NSOperationQueue* q in operationQueues)
+    {
+         for(NSOperation* op in q.operations)
+         {
+             [operation addDependency:op];
+         }
+    }
+    NSOperationQueue* queue = [[NSOperationQueue alloc] init];
+    queue.MaxConcurrentOperationCount = 1;
+    [queue addOperation:operation];
+    [operationQueues addObject:queue];
+    
 }
 
 @end

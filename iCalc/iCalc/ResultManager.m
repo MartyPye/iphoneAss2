@@ -39,7 +39,7 @@
         self.currentPositionInHistory++;
     }
     
-    NSLog(@"pos: %d", self.currentPositionInHistory);
+    //NSLog(@"pos: %d", self.currentPositionInHistory);
     // check if current position is a valid index
     if (self.currentPositionInHistory < [historyOfResults count])
         return [historyOfResults objectAtIndex:self.currentPositionInHistory];
@@ -54,7 +54,7 @@
     if (self.currentPositionInHistory > 0) {
         self.currentPositionInHistory--;
     }
-    NSLog(@"pos: %d", self.currentPositionInHistory);
+    //NSLog(@"pos: %d", self.currentPositionInHistory);
     // check if current position is a valid index
     if (self.currentPositionInHistory < [historyOfResults count])
         return [historyOfResults objectAtIndex:self.currentPositionInHistory];
@@ -141,7 +141,7 @@
         }
     }
     
-    NSLog(@"history: %@, posInHistory: %@", historyOfResults, [[NSNumber alloc] initWithInt:self.currentPositionInHistory]);
+    //NSLog(@"history: %@, posInHistory: %@", historyOfResults, [[NSNumber alloc] initWithInt:self.currentPositionInHistory]);
     
     NSDictionary *plistDict = [NSDictionary dictionaryWithObjects:
                                [NSArray arrayWithObjects: historyOfResults, [[NSNumber alloc] initWithInt:self.currentPositionInHistory], nil]

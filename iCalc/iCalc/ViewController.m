@@ -225,7 +225,7 @@
         self.numberTextField.text = [self.numberTextField.text stringByAppendingString:@"."];
     }
     lastPressedButtonType = PointButton;
-//    [self saveState];
+    //    [self saveState];
 }
 
 
@@ -234,7 +234,7 @@
 // ----------------------------------------------------------------------------------------------------
 - (IBAction)clearDisplay:(UIButton*)sender {
     lastPressedButtonType = ClearButton;
-
+    
     // clear the first Operand
     [self.calculator setFirstOperand:0];
     currentResult = 0;
@@ -271,7 +271,7 @@
     currentOperation = BCOperatorNoOperation;
     [self.calculator reset];
     lastToggledOperator.selected = NO;
-//    [self saveState];
+    //    [self saveState];
     textFieldShouldBeCleared = YES;
 }
 
@@ -390,7 +390,7 @@
 {
     NSUInteger currentPositionInHistory = [self.calculator currentPositionInHistory];
     
-    NSLog(@"Current pos in history: %d", currentPositionInHistory);    
+    //NSLog(@"Current pos in history: %d", currentPositionInHistory);
     self.leftArrowLabel.text = [NSString stringWithFormat:@"%i", currentPositionInHistory];
     self.rightArrowLabel.text = [NSString stringWithFormat:@"%i", [self.calculator historySize] - 1 - currentPositionInHistory];
     if ([self.calculator historySize] == 0)
@@ -447,11 +447,6 @@
         self.numberTextField.text = [NSString stringWithFormat:@"%@", result];
         // apply appropriate rounding to textfield
         [self applyRoundingToTextfield];
-        if (result == 0) {
-            self.checkingPrimeLabel.text = [NSString stringWithFormat:@"Calculation of %@ is stopped", result];
-            self.spinner.hidden = YES;
-            [self.spinner stopAnimating];
-        }
     }
 }
 
